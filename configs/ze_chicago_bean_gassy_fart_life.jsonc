@@ -1,0 +1,9 @@
+[
+    {
+        "name":             "Mr. Roth",
+        "breakable":        "seph_hp"
+    },
+    {
+        "breakable":        "bosss_hp"
+    }
+]
