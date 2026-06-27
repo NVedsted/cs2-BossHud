@@ -8,13 +8,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.370" PrivateAssets="all" />
+        <PackageReference Include="CounterStrikeSharp.API" Version="1.0.370" PrivateAssets="all"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="HitMarkApi">
-        <HintPath>D:\Servers\Steam\cs2\game\csgo\addons\counterstrikesharp\shared\HitMarkApi\HitMarkApi.dll</HintPath>
-      </Reference>
+        <Reference Include="HitMarkApi" Condition="$(DefineConstants.Contains('HITMARKER'))">
+            <HintPath>D:\Servers\Steam\cs2\game\csgo\addons\counterstrikesharp\shared\HitMarkApi\HitMarkApi.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>

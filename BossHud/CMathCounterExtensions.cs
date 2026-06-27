@@ -11,6 +11,6 @@ public static class CMathCounterExtensions
     {
         _outValueOffset ??= Schema.GetSchemaOffset("CMathCounter", "m_OutValue");
 
-        return *(float*) IntPtr.Add(counter.Handle, _outValueOffset.Value  + 24);
+        return *(float*)IntPtr.Add(counter.Handle, _outValueOffset.Value + 24);
     }
 }

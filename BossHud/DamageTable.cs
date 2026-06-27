@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using BossHud.Bosses;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud;

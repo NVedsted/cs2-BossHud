@@ -1,7 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
-namespace BossHud;
+namespace BossHud.Bosses;
 
 public sealed class SimpleCounterBoss(BossHudPlugin plugin, CMathCounter counter) : Boss(plugin)
 {

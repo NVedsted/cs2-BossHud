@@ -1,26 +1,51 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Text;
+using System.Text.Json;
+using BossHud.BossConfigs;
+using BossHud.Bosses;
+using BossHud.Model;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
+using Microsoft.Extensions.Logging;
 
 namespace BossHud;
 
 [MinimumApiVersion(367)]
-public class BossHudPlugin : BasePlugin
+public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 {
     public override string ModuleName => "BossHud";
     public override string ModuleVersion => "Nicklas Vedsted";
+
+    private static readonly string ConfigDirectory =
+        Path.Combine(Application.RootDirectory, "configs/plugins/BossHud");
+
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        TypeInfoResolver = BossHudJsonContext.Default,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+    };
+
+    private List<BossConfig> _activeBossConfigs = [];
 
     private readonly List<Boss> _initializedBosses = [];
 
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
     public override void Load(bool hotReload)
     {
-        RegisterListener<Listeners.OnEntityCreated>(OnEntityCreated);
+        RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
         RegisterListener<Listeners.OnTick>(OnTick);
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
 
         RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFull);
         RegisterEventHandler<EventPlayerDisconnect>(EventPlayerDisconnect);
+        RegisterEventHandler<EventRoundEnd>(EventRoundEnded);
+
+        SetupMessageUpdater();
 
         if (hotReload)
         {
@@ -33,19 +58,147 @@ public class BossHudPlugin : BasePlugin
             {
                 SetupBoss(entity);
             }
+
+            OnMapStart(Server.MapName);
+        }
+    }
+
+    private HookResult EventRoundEnded(EventRoundEnd @event, GameEventInfo info)
+    {
+        _initializedBosses.ForEach(b => b.Dispose());
+        _initializedBosses.Clear();
+        return HookResult.Continue;
+    }
+
+    private void SetupMessageUpdater()
+    {
+        var token = _cancellationTokenSource.Token;
+        // Runs in worker thread
+        Task.Run(async () =>
+        {
+            void UpdateMessage()
+            {
+                var activeBoss = _initializedBosses
+                    .FirstOrDefault(b => b is
+                        { Disposed: false, Active: true }); // TODO: Pick more intelligently or multi-show
+
+                if (activeBoss is null)
+                {
+                    _bossMessage = null;
+                    return;
+                }
+
+                var hpPercentage = activeBoss.CurrentHealth / (double)activeBoss.MaxHealth;
+                var displaySegments = (int)Math.Round(hpPercentage * 20.0, MidpointRounding.AwayFromZero);
+                var remaining = 20 - displaySegments;
+
+                var builder = new StringBuilder();
+                if (activeBoss.Name is not null)
+                {
+                    builder.Append($"<font>{activeBoss.Name}</font><br>");
+                }
+
+                builder.Append(
+                    $"<font class=\"fontSize-l\" color=\"green\">{activeBoss.CurrentHealth}</font> <font>({hpPercentage * 100.0:N0}%)</font><br><font color=\"green\">");
+
+                for (var i = 0; i < displaySegments; i++)
+                {
+                    builder.Append('█');
+                }
+
+                builder.Append("</font><font color=\"gray\">");
+
+                for (var i = 0; i < remaining; i++)
+                {
+                    builder.Append('█');
+                }
+
+                builder.Append("</font>");
+
+                _bossMessage = builder.ToString();
+            }
+
+            Logger.LogInformation("Starting async boss message thread");
+            while (!token.IsCancellationRequested)
+            {
+                // TODO: not thread safe
+                _initializedBosses.RemoveAll(b => b.Disposed);
+                UpdateMessage();
+                await Task.Delay(TimeSpan.FromMilliseconds(100), token);
+            }
+
+            Logger.LogInformation("Thread died");
+        }, token);
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        _cancellationTokenSource.Cancel();
+    }
+
+    private void OnMapStart(string mapName)
+    {
+        Logger.LogInformation("Loading configs for  {MapName}", mapName);
+
+        var configName = Path.Combine(ConfigDirectory, $"maps/{mapName}.jsonc");
+
+        if (File.Exists(configName))
+        {
+            var entries = JsonSerializer.Deserialize<Entry[]>(File.OpenRead(configName), JsonSerializerOptions);
+
+            if (entries is null) throw new InvalidOperationException($"{configName} could not be parsed");
+
+            _activeBossConfigs = entries.Select(c =>
+                {
+                    try
+                    {
+                        return c.Parse();
+                    }
+                    catch (EntryNotSupportedException exception)
+                    {
+                        Logger.LogError(exception,
+                            "A boss config for {MapName} uses unsupported configuration; ignoring", mapName);
+                        return null;
+                    }
+                })
+                .Where(c => c is not null)
+                .Cast<BossConfig>()
+                .ToList();
+        }
+        else
+        {
+            Logger.LogInformation("Could not find {ConfigName}", configName);
         }
     }
 
     private void SetupBoss(CEntityInstance entity)
     {
-        Boss? boss = entity.DesignerName switch
-        {
-            "func_breakable" => new BreakableBoss(this, entity.As<CBreakable>()) { Name = entity.Entity!.Name },
-            "math_counter" => new SimpleCounterBoss(this, entity.As<CMathCounter>()) { Name = entity.Entity!.Name },
-            _ => null
-        };
+        var targetName = entity.Entity?.Name;
+        Logger.LogInformation("Trying to setup {TargetName} (#{EntityId}) as boss", targetName, entity.Index);
 
-        if (boss == null) return;
+        if (targetName is null) return; // TODO: hammer IDs?
+
+        var bossConfig = _activeBossConfigs.Find(c => c switch
+        {
+            BreakableBossConfig breakableBossConfig => targetName == breakableBossConfig.BreakableName,
+            SimpleCounterBossConfig simpleCounterBossConfig => targetName == simpleCounterBossConfig.CounterName,
+            _ => throw new ArgumentOutOfRangeException(nameof(c))
+        });
+
+        if (bossConfig == null) return;
+
+        Boss boss = bossConfig switch
+        {
+            BreakableBossConfig breakableBossConfig => new BreakableBoss(this, entity.As<CBreakable>())
+            {
+                Name = breakableBossConfig.Name
+            },
+            SimpleCounterBossConfig simpleCounterBossConfig => new SimpleCounterBoss(this, entity.As<CMathCounter>())
+            {
+                Name = simpleCounterBossConfig.Name,
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(bossConfig))
+        };
 
         boss.Initialize();
         _initializedBosses.Add(boss);
@@ -65,30 +218,31 @@ public class BossHudPlugin : BasePlugin
         return HookResult.Continue;
     }
 
+    private string? _bossMessage;
+
     private void OnTick()
     {
+        if (_bossMessage is null) return;
+
         foreach (var player in _activePlayers)
         {
             if (player is null) continue;
 
-            _initializedBosses.RemoveAll(b => b.Disposed);
-
-            var msg = string.Join('\n', _initializedBosses
-                .Where(b => b is { Disposed: false, Active: true })
-                .Select(b => $"{b.Name}: {b.CurrentHealth} / {b.MaxHealth} ({(float)b.CurrentHealth / b.MaxHealth * 100.0f:F1}%)"));
-
-            if (msg != "")
-            {
-                player.PrintToCenterHtml(msg);
-            }
+            player.PrintToCenterHtml(_bossMessage);
         }
     }
 
-    private void OnEntityCreated(CEntityInstance entity)
+    private void OnEntitySpawned(CEntityInstance entity)
     {
-        Server.NextFrame(() =>
-        {
-            SetupBoss(entity);
-        });
+        Server.NextFrame(() => { SetupBoss(entity); });
     }
+
+    public void OnConfigParsed(BossHudPluginConfig config)
+    {
+        Config = config;
+    }
+
+    public BossHudPluginConfig? Config { get; set; }
 }
+
+public class BossHudPluginConfig : BasePluginConfig;

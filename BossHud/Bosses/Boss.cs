@@ -1,11 +1,14 @@
 ﻿using CounterStrikeSharp.API.Core;
+using Microsoft.Extensions.Logging;
+#if HITMARKER
 using HitMarkApi;
+#endif
 
-namespace BossHud;
+namespace BossHud.Bosses;
 
 public abstract class Boss(BossHudPlugin plugin) : IDisposable
 {
-    public required string Name { get; init; }
+    public string? Name { get; init; }
 
     public abstract BossType BossType { get; }
 
@@ -23,18 +26,22 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
 
     protected void OnHit(CCSPlayerController player)
     {
+#if HITMARKER
         IHitMarkApi.Capability.Get()!.StartHitMark(player, false, null, null);
+#endif
     }
 
     public virtual void Dispose()
     {
+        plugin.Logger.LogInformation("Boss {BossName} has been disposed", Name);
         GC.SuppressFinalize(this);
         Disposed = true;
     }
 
     protected void Defeated()
     {
-        DamageTable.Print(BossType);
+        // TODO: Enable once ready
+        // DamageTable.Print(BossType);
         Dispose();
     }
 }

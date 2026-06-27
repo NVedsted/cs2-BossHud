@@ -1,13 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
-namespace BossHud;
-
-public enum BossType
-{
-    Hp,
-    Hits,
-}
+namespace BossHud.Bosses;
 
 public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : Boss(plugin)
 {
