@@ -28,7 +28,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private List<BossConfig> _activeBossConfigs = [];
 
-    private readonly List<Boss> _initializedBosses = [];
+    private readonly BossManager _bossManager = new();
 
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
@@ -38,7 +38,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     {
         RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
         RegisterListener<Listeners.OnTick>(OnTick);
-        RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
 
         RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFull);
@@ -65,8 +64,12 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private HookResult EventRoundEnded(EventRoundEnd @event, GameEventInfo info)
     {
-        _initializedBosses.ForEach(b => b.Dispose());
-        _initializedBosses.Clear();
+        // TODO: needed as entity-removed event disposes? Perhaps good in any case.
+        foreach (var activeBoss in _bossManager.ActiveBosses)
+        {
+            activeBoss.Dispose();
+        }
+
         return HookResult.Continue;
     }
 
@@ -78,7 +81,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         {
             void UpdateMessage()
             {
-                var activeBoss = _initializedBosses
+                var activeBoss = _bossManager.ActiveBosses
                     .FirstOrDefault(b => b is
                         { Disposed: false, Active: true }); // TODO: Pick more intelligently or multi-show
 
@@ -121,8 +124,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
             Logger.LogInformation("Starting async boss message thread");
             while (!token.IsCancellationRequested)
             {
-                // TODO: not thread safe
-                _initializedBosses.RemoveAll(b => b.Disposed);
+                // TODO: disable when no active bosses
                 UpdateMessage();
                 await Task.Delay(TimeSpan.FromMilliseconds(100), token);
             }
@@ -201,7 +203,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         };
 
         boss.Initialize();
-        _initializedBosses.Add(boss);
+        _bossManager.Register(boss);
     }
 
     private HookResult EventPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
@@ -242,7 +244,12 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         Config = config;
     }
 
-    public BossHudPluginConfig? Config { get; set; }
+    public required BossHudPluginConfig Config { get; set; }
+
+    public void UnregisterBoss(Boss boss)
+    {
+        _bossManager.Unregister(boss);
+    }
 }
 
 public class BossHudPluginConfig : BasePluginConfig;

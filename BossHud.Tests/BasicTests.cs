@@ -40,5 +40,6 @@ public class BasicTests
         }
 
         Console.WriteLine($"Success: {success}, Total: {total} ({success / (double)total * 100.0:F1}%)");
+        await Assert.That(success).IsEqualTo(454);
     }
 }

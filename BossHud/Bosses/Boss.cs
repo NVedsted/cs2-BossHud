@@ -34,6 +34,7 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
     public virtual void Dispose()
     {
         plugin.Logger.LogInformation("Boss {BossName} has been disposed", Name);
+        plugin.UnregisterBoss(this);
         GC.SuppressFinalize(this);
         Disposed = true;
     }
