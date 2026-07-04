@@ -48,6 +48,8 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
         if (hotReload)
         {
+            OnMapStart(Server.MapName);
+
             foreach (var player in Utilities.GetPlayers())
             {
                 _activePlayers[player.Slot] = player;
@@ -57,8 +59,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
             {
                 SetupBoss(entity);
             }
-
-            OnMapStart(Server.MapName);
         }
     }
 
