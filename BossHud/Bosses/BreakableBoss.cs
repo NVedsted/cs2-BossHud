@@ -14,7 +14,14 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
         _plugin.RegisterListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
         _plugin.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
         _plugin.HookSingleEntityOutput(breakable, "OnBreak", OnBreak);
+        _plugin.HookSingleEntityOutput(breakable, "OnHealthChanged", OnHealthChanged);
         Update();
+    }
+
+    private HookResult OnHealthChanged(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
+    {
+        Update();
+        return HookResult.Continue;
     }
 
     private void OnEntityDeleted(CEntityInstance entity)
@@ -38,6 +45,7 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
         _plugin.RemoveListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
         _plugin.RemoveListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
         _plugin.UnhookSingleEntityOutput(breakable, "OnBreak", OnBreak);
+        _plugin.UnhookSingleEntityOutput(breakable, "OnHealthChanged", OnHealthChanged);
         base.Dispose();
     }
 
@@ -50,13 +58,12 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
     private void Update()
     {
         CurrentHealth = breakable.Health;
-        MaxHealth = breakable.MaxHealth;
+        MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
 
     private void PostDamage(CCSPlayerController player, float damage)
     {
         Active = true;
-        Update();
         DamageTable.AddDamage(player, damage);
         OnHit(player);
     }

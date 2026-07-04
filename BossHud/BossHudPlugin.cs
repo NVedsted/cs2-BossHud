@@ -91,6 +91,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     return;
                 }
 
+                // TODO: cap at 100%
                 var hpPercentage = activeBoss.CurrentHealth / (double)activeBoss.MaxHealth;
                 var displaySegments = (int)Math.Round(hpPercentage * 20.0, MidpointRounding.AwayFromZero);
                 var remaining = 20 - displaySegments;
@@ -101,6 +102,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     builder.Append($"<font>{activeBoss.Name}</font><br>");
                 }
 
+                // TODO: gradient as HP lowers
                 builder.Append(
                     $"<font class=\"fontSize-l\" color=\"green\">{activeBoss.CurrentHealth}</font> <font>({hpPercentage * 100.0:N0}%)</font><br><font color=\"green\">");
 
