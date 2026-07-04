@@ -10,15 +10,19 @@ public sealed class SimpleCounterBoss(BossHudPlugin plugin, CMathCounter counter
     private void Update()
     {
         CurrentHealth = (int)counter.GetValue();
-        MaxHealth = (int)counter.Max; // TODO
+        MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
 
     private void PostDamage(CCSPlayerController player)
     {
-        Active = true;
         var oldHealth = CurrentHealth;
         Update();
         var damage = oldHealth - CurrentHealth;
+
+        if (damage <= 0) return;
+
+        // TODO: maybe move somewhere else
+        Active = true;
         DamageTable.AddDamage(player, damage);
         OnHit(player);
     }
