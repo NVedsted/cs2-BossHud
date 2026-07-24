@@ -102,9 +102,9 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     builder.Append($"<font>{activeBoss.Name}</font><br>");
                 }
 
-                // TODO: gradient as HP lowers
+                var color = Gradient.GetHpColor(hpPercentage);
                 builder.Append(
-                    $"<font class=\"fontSize-l\" color=\"green\">{activeBoss.CurrentHealth}</font> <font>({hpPercentage * 100.0:N0}%)</font><br><font color=\"green\">");
+                    $"<font class=\"fontSize-l\" color=\"{color}\">{activeBoss.CurrentHealth}</font> <font>({hpPercentage * 100.0:N0}%)</font><br><font color=\"{color}\">");
 
                 for (var i = 0; i < displaySegments; i++)
                 {
@@ -160,6 +160,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     }
                     catch (EntryNotSupportedException exception)
                     {
+                        // TODO: Notify admins?
                         Logger.LogError(exception,
                             "A boss config for {MapName} uses unsupported configuration; ignoring", mapName);
                         return null;
