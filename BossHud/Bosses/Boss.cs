@@ -16,13 +16,21 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
 
     public int MaxHealth { get; protected set; }
 
-    public bool Active { get; set; }
+    public bool Active { get; private set; }
 
     public bool Disposed { get; private set; }
 
     protected DamageTable DamageTable { get; } = new();
 
     public abstract void Initialize();
+
+    protected void Activate()
+    {
+        if (Active) return;
+
+        plugin.Logger.LogInformation("Activating boss {BossName}", Name);
+        Active = true;
+    }
 
     protected void OnHit(CCSPlayerController player)
     {
@@ -33,7 +41,6 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
 
     public virtual void Dispose()
     {
-        plugin.Logger.LogInformation("Boss {BossName} has been disposed", Name);
         plugin.UnregisterBoss(this);
         GC.SuppressFinalize(this);
         Disposed = true;
@@ -41,6 +48,7 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
 
     protected void Defeated()
     {
+        plugin.Logger.LogInformation("Boss {BossName} has been defeated", Name);
         // TODO: Enable once ready
         // DamageTable.Print(BossType);
         Dispose();

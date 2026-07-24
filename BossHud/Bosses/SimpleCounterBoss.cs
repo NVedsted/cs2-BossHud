@@ -22,7 +22,7 @@ public sealed class SimpleCounterBoss(BossHudPlugin plugin, CMathCounter counter
         if (damage <= 0) return;
 
         // TODO: maybe move somewhere else
-        Active = true;
+        Activate();
         DamageTable.AddDamage(player, damage);
         OnHit(player);
     }

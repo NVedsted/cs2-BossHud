@@ -81,7 +81,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     private HookResult EventRoundEnded(EventRoundEnd @event, GameEventInfo info)
     {
         // TODO: needed as entity-removed event disposes? Perhaps good in any case.
-        foreach (var activeBoss in _bossManager.ActiveBosses)
+        foreach (var activeBoss in _bossManager.PresentBosses)
         {
             activeBoss.Dispose();
         }
@@ -97,12 +97,12 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     private void OnMapStart(string mapName)
     {
         _invalidMapConfig = false;
-        Logger.LogInformation("Loading configs for  {MapName}", mapName);
 
         var configName = Path.Combine(ConfigDirectory, $"maps/{mapName}.jsonc");
 
         if (File.Exists(configName))
         {
+            Logger.LogInformation("Loading config for {MapName}", mapName);
             using var stream = File.OpenRead(configName);
             var entries = JsonSerializer.Deserialize<Entry[]>(stream, JsonSerializerOptions);
 
@@ -128,7 +128,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         }
         else
         {
-            Logger.LogInformation("Could not find {ConfigName}", configName);
+            Logger.LogInformation("Could not find config for {MapName} ({ConfigName})", mapName, configName);
         }
     }
 
@@ -143,7 +143,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     private void SetupBoss(CEntityInstance entity)
     {
         var targetName = entity.Entity?.Name;
-        Logger.LogInformation("Trying to setup {TargetName} (#{EntityId}) as boss", targetName, entity.Index);
 
         if (targetName is null) return; // TODO: hammer IDs?
 
@@ -155,6 +154,8 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         });
 
         if (bossConfig == null) return;
+
+        Logger.LogInformation("Setting up boss {BossName} for {TargetName}", bossConfig.Name ?? "<no-name>", targetName);
 
         Boss boss = bossConfig switch
         {

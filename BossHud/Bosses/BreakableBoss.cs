@@ -63,7 +63,7 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
 
     private void PostDamage(CCSPlayerController player, float damage)
     {
-        Active = true;
+        Activate();
         DamageTable.AddDamage(player, damage);
         OnHit(player);
     }

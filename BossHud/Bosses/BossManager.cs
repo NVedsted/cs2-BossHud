@@ -6,25 +6,25 @@ namespace BossHud.Bosses;
 
 public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 {
-    private readonly ConcurrentDictionary<Boss, byte> _activeBosses = new();
+    private readonly ConcurrentDictionary<Boss, byte> _presentBosses = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private TaskCompletionSource? _waker;
     private bool _started;
     private bool _disposed;
 
-    public IEnumerable<Boss> ActiveBosses => _activeBosses.Keys;
+    public IEnumerable<Boss> PresentBosses => _presentBosses.Keys;
 
     public string? BossMessage { get; private set; }
 
     public void Register(Boss boss)
     {
-        _activeBosses.TryAdd(boss, 0);
+        _presentBosses.TryAdd(boss, 0);
         WakeIfNeeded();
     }
 
     public void Unregister(Boss boss)
     {
-        _activeBosses.TryRemove(boss, out _);
+        _presentBosses.TryRemove(boss, out _);
     }
 
     private void EnsureMessageUpdaterStarted()
@@ -37,36 +37,36 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
         // Runs in worker thread
         Task.Run(async () =>
         {
-            plugin.Logger.LogInformation("Starting async boss message thread");
+            plugin.Logger.LogInformation("Starting background worker");
             while (!token.IsCancellationRequested)
             {
-                if (_activeBosses.IsEmpty)
+                if (_presentBosses.IsEmpty)
                 {
                     BossMessage = null;
-                    plugin.Logger.LogInformation("Boss message thread paused");
                     _waker = new TaskCompletionSource();
                     WakeIfNeeded(); // In case a boss was registered after beginning to pause
+                    plugin.Logger.LogInformation("Background worker has paused");
                     await _waker.Task;
-                    plugin.Logger.LogInformation("Boss message thread unpaused");
+                    plugin.Logger.LogInformation("Background worker has unpaused");
                 }
 
                 UpdateMessage();
                 await Task.Delay(TimeSpan.FromMilliseconds(100), token);
             }
 
-            plugin.Logger.LogInformation("Thread died");
+            plugin.Logger.LogInformation("Background worker has stopped");
         }, token);
     }
 
     private void WakeIfNeeded()
     {
         EnsureMessageUpdaterStarted();
-        if (!_activeBosses.IsEmpty) _waker?.TrySetResult();
+        if (!_presentBosses.IsEmpty) _waker?.TrySetResult();
     }
 
     private void UpdateMessage()
     {
-        var activeBoss = ActiveBosses
+        var activeBoss = PresentBosses
             .FirstOrDefault(b => b is
                 { Disposed: false, Active: true }); // TODO: Pick more intelligently or multi-show
 
