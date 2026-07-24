@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using BossHud.BossConfigs;
 using BossHud.Bosses;
 using BossHud.Model;
@@ -28,11 +27,16 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private List<BossConfig> _activeBossConfigs = [];
 
-    private readonly BossManager _bossManager = new();
+    private readonly BossManager _bossManager;
 
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    public BossHudPlugin()
+    {
+        _bossManager = new(this);
+    }
 
     public override void Load(bool hotReload)
     {
@@ -43,8 +47,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFull);
         RegisterEventHandler<EventPlayerDisconnect>(EventPlayerDisconnect);
         RegisterEventHandler<EventRoundEnd>(EventRoundEnded);
-
-        SetupMessageUpdater();
 
         if (hotReload)
         {
@@ -71,68 +73,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         }
 
         return HookResult.Continue;
-    }
-
-    private void SetupMessageUpdater()
-    {
-        var token = _cancellationTokenSource.Token;
-        // Runs in worker thread
-        Task.Run(async () =>
-        {
-            void UpdateMessage()
-            {
-                var activeBoss = _bossManager.ActiveBosses
-                    .FirstOrDefault(b => b is
-                        { Disposed: false, Active: true }); // TODO: Pick more intelligently or multi-show
-
-                if (activeBoss is null)
-                {
-                    _bossMessage = null;
-                    return;
-                }
-
-                // TODO: cap at 100%
-                var hpPercentage = activeBoss.CurrentHealth / (double)activeBoss.MaxHealth;
-                var displaySegments = (int)Math.Round(hpPercentage * 20.0, MidpointRounding.AwayFromZero);
-                var remaining = 20 - displaySegments;
-
-                var builder = new StringBuilder();
-                if (activeBoss.Name is not null)
-                {
-                    builder.Append($"<font>{activeBoss.Name}</font><br>");
-                }
-
-                var color = Gradient.GetHpColor(hpPercentage);
-                builder.Append(
-                    $"<font class=\"fontSize-l\" color=\"{color}\">{activeBoss.CurrentHealth}</font> <font>({hpPercentage * 100.0:N0}%)</font><br><font color=\"{color}\">");
-
-                for (var i = 0; i < displaySegments; i++)
-                {
-                    builder.Append('█');
-                }
-
-                builder.Append("</font><font color=\"gray\">");
-
-                for (var i = 0; i < remaining; i++)
-                {
-                    builder.Append('█');
-                }
-
-                builder.Append("</font>");
-
-                _bossMessage = builder.ToString();
-            }
-
-            Logger.LogInformation("Starting async boss message thread");
-            while (!token.IsCancellationRequested)
-            {
-                // TODO: disable when no active bosses
-                UpdateMessage();
-                await Task.Delay(TimeSpan.FromMilliseconds(100), token);
-            }
-
-            Logger.LogInformation("Thread died");
-        }, token);
     }
 
     public override void Unload(bool hotReload)
@@ -223,17 +163,13 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         return HookResult.Continue;
     }
 
-    private string? _bossMessage;
-
     private void OnTick()
     {
-        if (_bossMessage is null) return;
+        if (_bossManager.BossMessage is null) return;
 
         foreach (var player in _activePlayers)
         {
-            if (player is null) continue;
-
-            player.PrintToCenterHtml(_bossMessage);
+            player?.PrintToCenterHtml(_bossManager.BossMessage);
         }
     }
 
@@ -252,6 +188,12 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     public void UnregisterBoss(Boss boss)
     {
         _bossManager.Unregister(boss);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        _bossManager.Dispose();
     }
 }
 
