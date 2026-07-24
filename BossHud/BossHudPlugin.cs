@@ -5,6 +5,8 @@ using BossHud.Model;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
+using CounterStrikeSharp.API.Core.Translations;
+using CounterStrikeSharp.API.Modules.Admin;
 using Microsoft.Extensions.Logging;
 
 namespace BossHud;
@@ -32,6 +34,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private bool _invalidMapConfig;
 
     public BossHudPlugin()
     {
@@ -47,6 +50,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFull);
         RegisterEventHandler<EventPlayerDisconnect>(EventPlayerDisconnect);
         RegisterEventHandler<EventRoundEnd>(EventRoundEnded);
+        RegisterEventHandler<EventRoundStart>(EventRoundStart);
 
         if (hotReload)
         {
@@ -62,6 +66,16 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                 SetupBoss(entity);
             }
         }
+    }
+
+    private HookResult EventRoundStart(EventRoundStart @event, GameEventInfo info)
+    {
+        if (_invalidMapConfig)
+        {
+            NotifyAdmins("The map configuration is not fully-supported; some bosses might not show as intended");
+        }
+
+        return HookResult.Continue;
     }
 
     private HookResult EventRoundEnded(EventRoundEnd @event, GameEventInfo info)
@@ -82,13 +96,15 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private void OnMapStart(string mapName)
     {
+        _invalidMapConfig = false;
         Logger.LogInformation("Loading configs for  {MapName}", mapName);
 
         var configName = Path.Combine(ConfigDirectory, $"maps/{mapName}.jsonc");
 
         if (File.Exists(configName))
         {
-            var entries = JsonSerializer.Deserialize<Entry[]>(File.OpenRead(configName), JsonSerializerOptions);
+            using var stream = File.OpenRead(configName);
+            var entries = JsonSerializer.Deserialize<Entry[]>(stream, JsonSerializerOptions);
 
             if (entries is null) throw new InvalidOperationException($"{configName} could not be parsed");
 
@@ -100,7 +116,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     }
                     catch (EntryNotSupportedException exception)
                     {
-                        // TODO: Notify admins?
+                        _invalidMapConfig = true;
                         Logger.LogError(exception,
                             "A boss config for {MapName} uses unsupported configuration; ignoring", mapName);
                         return null;
@@ -113,6 +129,14 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         else
         {
             Logger.LogInformation("Could not find {ConfigName}", configName);
+        }
+    }
+
+    private static void NotifyAdmins(string message)
+    {
+        foreach (var admin in Utilities.GetPlayers().Where(p => AdminManager.PlayerHasPermissions(p, "@css/generic")))
+        {
+            admin.PrintToChat($"{{green}}[BossHud] {{default}}{message}".ReplaceColorTags());
         }
     }
 
