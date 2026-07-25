@@ -13,7 +13,7 @@ using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace BossHud;
 
-[MinimumApiVersion(367)]
+[MinimumApiVersion(370)]
 public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 {
     public override string ModuleName => "BossHud";
