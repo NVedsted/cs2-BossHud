@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using BossHud.Model;
 
 namespace BossHud.Tests;
@@ -10,6 +11,9 @@ public class BasicTests
     {
         var success = 0;
         var total = 0;
+
+        var unsupportedStats = new Dictionary<string, long>();
+
         foreach (var fileName in Directory.EnumerateFiles("../../../../configs"))
         {
             await using var stream = File.OpenRead(fileName);
@@ -17,6 +21,7 @@ public class BasicTests
             {
                 TypeInfoResolver = BossHudJsonContext.Default,
                 ReadCommentHandling = JsonCommentHandling.Skip,
+                UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
             });
 
             if (entries is null) throw new InvalidOperationException($"{fileName} could not be parsed");
@@ -30,9 +35,13 @@ public class BasicTests
                     {
                         return e.Parse();
                     }
-                    catch
+                    catch (EntryPropertiesNotSupported exception)
                     {
-                        // ignored
+                        foreach (var property in exception.Properties)
+                        {
+                            unsupportedStats[property] = unsupportedStats.GetValueOrDefault(property) + 1;
+                        }
+
                         return null;
                     }
                 })
@@ -40,6 +49,13 @@ public class BasicTests
         }
 
         Console.WriteLine($"Success: {success}, Total: {total} ({success / (double)total * 100.0:F1}%)");
-        await Assert.That(success).IsEqualTo(471);
+
+        Console.WriteLine("Unsupported stats:");
+        foreach (var keyValuePair in unsupportedStats.OrderByDescending(kvp => kvp.Value))
+        {
+            Console.WriteLine($"\t{keyValuePair.Key}: {keyValuePair.Value}");
+        }
+
+        await Assert.That(success).IsEqualTo(319);
     }
 }

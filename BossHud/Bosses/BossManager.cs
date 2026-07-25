@@ -15,6 +15,7 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 
     private IEnumerable<Boss> ActiveBosses => _activeBosses.Keys;
 
+    // TODO: Should a boss be triggerable again on the same round if multi-trigger is off?
     public readonly HashSet<BossConfig> BossesSeenThisRound = new(); // TODO: Move to simpler "round context"
 
     public string? BossMessage { get; private set; }
