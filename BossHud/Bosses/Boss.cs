@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using BossHud.BossConfigs;
+using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Logging;
 #if HITMARKER
 using HitMarkApi;
@@ -6,9 +7,9 @@ using HitMarkApi;
 
 namespace BossHud.Bosses;
 
-public abstract class Boss(BossHudPlugin plugin) : IDisposable
+public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposable
 {
-    public string? Name { get; init; }
+    public BossConfig Config => config;
 
     public abstract BossType BossType { get; }
 
@@ -16,21 +17,13 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
 
     public int MaxHealth { get; protected set; }
 
-    public bool Active { get; private set; }
+    public bool Shown => true;
 
     public bool Disposed { get; private set; }
 
     protected DamageTable DamageTable { get; } = new();
 
     public abstract void Initialize();
-
-    protected void Activate()
-    {
-        if (Active) return;
-
-        plugin.Logger.LogInformation("Activating boss {BossName}", Name);
-        Active = true;
-    }
 
     protected void OnHit(CCSPlayerController player)
     {
@@ -41,14 +34,14 @@ public abstract class Boss(BossHudPlugin plugin) : IDisposable
 
     public virtual void Dispose()
     {
-        plugin.UnregisterBoss(this);
+        plugin.BossManager.Unregister(this);
         GC.SuppressFinalize(this);
         Disposed = true;
     }
 
     protected void Defeated()
     {
-        plugin.Logger.LogInformation("Boss {BossName} has been defeated", Name);
+        plugin.Logger.LogInformation("Boss {BossName} has been defeated", Config.Name);
         // TODO: Enable once ready
         // DamageTable.Print(BossType);
         Dispose();

@@ -27,7 +27,6 @@ public record Entry
     public string? Backup { get; init; }
 
     [JsonPropertyName("trigger")]
-    [Unsupported]
     public OutputDefinitionWithDelay? Trigger { get; init; }
 
     [JsonPropertyName("showtrigger")]
@@ -54,6 +53,15 @@ public record Entry
                 $"Config contained the following unsupported properties: {string.Join(", ", unsupportedPropsSet)}");
         }
 
+        var config = ParseBaseConfig();
+
+        if (Trigger is not null) config.Trigger = Trigger;
+
+        return config;
+    }
+
+    private BossConfig ParseBaseConfig()
+    {
         if (Breakable is not null && Counter is not null)
         {
             throw new EntryNotSupportedException("Breakable and counter cannot both be set");

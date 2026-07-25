@@ -1,9 +1,14 @@
-﻿using CounterStrikeSharp.API;
+﻿using BossHud.BossConfigs;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : Boss(plugin)
+public sealed class BreakableBoss(
+    BreakableBossConfig config,
+    BossHudPlugin plugin,
+    CBreakable breakable)
+    : Boss(config, plugin)
 {
     private readonly BossHudPlugin _plugin = plugin;
     public override BossType BossType => BossType.Hp;
@@ -18,7 +23,13 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
         Update();
     }
 
-    private HookResult OnHealthChanged(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
+    private HookResult OnHealthChanged(
+        CEntityIOOutput output,
+        string name,
+        CEntityInstance activator,
+        CEntityInstance caller,
+        CVariant value,
+        float delay)
     {
         Update();
         return HookResult.Continue;
@@ -49,7 +60,13 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
         base.Dispose();
     }
 
-    private HookResult OnBreak(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
+    private HookResult OnBreak(
+        CEntityIOOutput output,
+        string name,
+        CEntityInstance activator,
+        CEntityInstance caller,
+        CVariant value,
+        float delay)
     {
         Server.NextFrame(Defeated);
         return HookResult.Continue;
@@ -63,7 +80,6 @@ public sealed class BreakableBoss(BossHudPlugin plugin, CBreakable breakable) : 
 
     private void PostDamage(CCSPlayerController player, float damage)
     {
-        Activate();
         DamageTable.AddDamage(player, damage);
         OnHit(player);
     }

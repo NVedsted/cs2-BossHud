@@ -7,7 +7,9 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
+using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace BossHud;
 
@@ -27,9 +29,10 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         AllowTrailingCommas = true,
     };
 
-    private List<BossConfig> _activeBossConfigs = [];
+    // TODO: commands for reloading and flushing active bosses?
+    private BossConfig[] _activeBossConfigs = [];
 
-    private readonly BossManager _bossManager;
+    public BossManager BossManager { get; }
 
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
@@ -38,14 +41,14 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     public BossHudPlugin()
     {
-        _bossManager = new(this);
+        BossManager = new(this);
     }
 
     public override void Load(bool hotReload)
     {
-        RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        HookEntityOutput("*", "*", OnEntityOutput);
 
         RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFull);
         RegisterEventHandler<EventPlayerDisconnect>(EventPlayerDisconnect);
@@ -60,12 +63,38 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
             {
                 _activePlayers[player.Slot] = player;
             }
+        }
+    }
 
-            foreach (var entity in Utilities.GetAllEntities())
+    private HookResult OnEntityOutput(
+        CEntityIOOutput output,
+        string name,
+        CEntityInstance activator,
+        CEntityInstance caller,
+        CVariant value,
+        float delay)
+    {
+        // TODO: account for delay?
+
+        var targetName = caller.Entity?.Name;
+
+        if (targetName is null) return HookResult.Continue;
+
+        foreach (var bossConfig in _activeBossConfigs)
+        {
+            if (targetName == bossConfig.Trigger.Entity && name == bossConfig.Trigger.Output)
             {
-                SetupBoss(entity);
+                bossConfig.SetupBoss(this);
             }
         }
+
+        return HookResult.Continue;
+    }
+
+    private void CleanupRound()
+    {
+        BossManager.CleanupRound();
+        CleanupRoundTimers();
     }
 
     private HookResult EventRoundStart(EventRoundStart @event, GameEventInfo info)
@@ -75,16 +104,15 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
             NotifyAdmins("The map configuration is not fully-supported; some bosses might not show as intended");
         }
 
+        // Sometimes round end is not triggered properly.
+        CleanupRound();
+
         return HookResult.Continue;
     }
 
     private HookResult EventRoundEnded(EventRoundEnd @event, GameEventInfo info)
     {
-        // TODO: needed as entity-removed event disposes? Perhaps good in any case.
-        foreach (var activeBoss in _bossManager.PresentBosses)
-        {
-            activeBoss.Dispose();
-        }
+        CleanupRound();
 
         return HookResult.Continue;
     }
@@ -124,7 +152,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                 })
                 .Where(c => c is not null)
                 .Cast<BossConfig>()
-                .ToList();
+                .ToArray();
         }
         else
         {
@@ -138,40 +166,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         {
             admin.PrintToChat($"{{green}}[BossHud] {{default}}{message}".ReplaceColorTags());
         }
-    }
-
-    private void SetupBoss(CEntityInstance entity)
-    {
-        var targetName = entity.Entity?.Name;
-
-        if (targetName is null) return; // TODO: hammer IDs?
-
-        var bossConfig = _activeBossConfigs.Find(c => c switch
-        {
-            BreakableBossConfig breakableBossConfig => targetName == breakableBossConfig.BreakableName,
-            SimpleCounterBossConfig simpleCounterBossConfig => targetName == simpleCounterBossConfig.CounterName,
-            _ => throw new ArgumentOutOfRangeException(nameof(c))
-        });
-
-        if (bossConfig == null) return;
-
-        Logger.LogInformation("Setting up boss {BossName} for {TargetName}", bossConfig.Name ?? "<no-name>", targetName);
-
-        Boss boss = bossConfig switch
-        {
-            BreakableBossConfig breakableBossConfig => new BreakableBoss(this, entity.As<CBreakable>())
-            {
-                Name = breakableBossConfig.Name
-            },
-            SimpleCounterBossConfig simpleCounterBossConfig => new SimpleCounterBoss(this, entity.As<CMathCounter>())
-            {
-                Name = simpleCounterBossConfig.Name,
-            },
-            _ => throw new ArgumentOutOfRangeException(nameof(bossConfig))
-        };
-
-        boss.Initialize();
-        _bossManager.Register(boss);
     }
 
     private HookResult EventPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
@@ -190,17 +184,12 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private void OnTick()
     {
-        if (_bossManager.BossMessage is null) return;
+        if (BossManager.BossMessage is null) return;
 
         foreach (var player in _activePlayers)
         {
-            player?.PrintToCenterHtml(_bossManager.BossMessage);
+            player?.PrintToCenterHtml(BossManager.BossMessage);
         }
-    }
-
-    private void OnEntitySpawned(CEntityInstance entity)
-    {
-        Server.NextFrame(() => { SetupBoss(entity); });
     }
 
     public void OnConfigParsed(BossHudPluginConfig config)
@@ -210,15 +199,27 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     public required BossHudPluginConfig Config { get; set; }
 
-    public void UnregisterBoss(Boss boss)
-    {
-        _bossManager.Unregister(boss);
-    }
-
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        _bossManager.Dispose();
+        CleanupRoundTimers();
+        BossManager.Dispose();
+    }
+
+    private readonly LinkedList<Timer> _roundTimers = new();
+
+    private void CleanupRoundTimers()
+    {
+        foreach (var timer in _roundTimers)
+        {
+            timer.Kill();
+        }
+        _roundTimers.Clear();
+    }
+
+    public void AddRoundTimer(float interval, Action callback)
+    {
+        _roundTimers.AddLast(new Timer(interval, callback, TimerFlags.STOP_ON_MAPCHANGE));
     }
 }
 

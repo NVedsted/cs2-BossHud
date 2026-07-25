@@ -1,9 +1,14 @@
-﻿using CounterStrikeSharp.API;
+﻿using BossHud.BossConfigs;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class SimpleCounterBoss(BossHudPlugin plugin, CMathCounter counter) : Boss(plugin)
+public sealed class SimpleCounterBoss(
+    SimpleCounterBossConfig config,
+    BossHudPlugin plugin,
+    CMathCounter counter)
+    : Boss(config, plugin)
 {
     private readonly BossHudPlugin _plugin = plugin;
 
@@ -22,7 +27,6 @@ public sealed class SimpleCounterBoss(BossHudPlugin plugin, CMathCounter counter
         if (damage <= 0) return;
 
         // TODO: maybe move somewhere else
-        Activate();
         DamageTable.AddDamage(player, damage);
         OnHit(player);
     }
@@ -44,7 +48,13 @@ public sealed class SimpleCounterBoss(BossHudPlugin plugin, CMathCounter counter
         Dispose();
     }
 
-    private HookResult OnCounterHitMin(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
+    private HookResult OnCounterHitMin(
+        CEntityIOOutput output,
+        string name,
+        CEntityInstance activator,
+        CEntityInstance caller,
+        CVariant value,
+        float delay)
     {
         Server.NextFrame(Defeated);
         return HookResult.Continue;

@@ -1,30 +1,44 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
+using BossHud.BossConfigs;
 using Microsoft.Extensions.Logging;
 
 namespace BossHud.Bosses;
 
 public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 {
-    private readonly ConcurrentDictionary<Boss, byte> _presentBosses = new();
+    private readonly ConcurrentDictionary<Boss, byte> _activeBosses = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private TaskCompletionSource? _waker;
     private bool _started;
     private bool _disposed;
 
-    public IEnumerable<Boss> PresentBosses => _presentBosses.Keys;
+    private IEnumerable<Boss> ActiveBosses => _activeBosses.Keys;
+
+    public readonly HashSet<BossConfig> BossesSeenThisRound = new(); // TODO: Move to simpler "round context"
 
     public string? BossMessage { get; private set; }
 
     public void Register(Boss boss)
     {
-        _presentBosses.TryAdd(boss, 0);
+        _activeBosses.TryAdd(boss, 0);
         WakeIfNeeded();
     }
 
     public void Unregister(Boss boss)
     {
-        _presentBosses.TryRemove(boss, out _);
+        _activeBosses.TryRemove(boss, out _);
+    }
+
+    public void CleanupRound()
+    {
+        // TODO: needed as entity-removed event disposes? Perhaps good in any case.
+        foreach (var activeBoss in ActiveBosses)
+        {
+            activeBoss.Dispose();
+        }
+
+        BossesSeenThisRound.Clear();
     }
 
     private void EnsureMessageUpdaterStarted()
@@ -40,7 +54,7 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
             plugin.Logger.LogInformation("Starting background worker");
             while (!token.IsCancellationRequested)
             {
-                if (_presentBosses.IsEmpty)
+                if (_activeBosses.IsEmpty)
                 {
                     BossMessage = null;
                     _waker = new TaskCompletionSource();
@@ -61,14 +75,15 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     private void WakeIfNeeded()
     {
         EnsureMessageUpdaterStarted();
-        if (!_presentBosses.IsEmpty) _waker?.TrySetResult();
+        if (!_activeBosses.IsEmpty) _waker?.TrySetResult();
     }
 
     private void UpdateMessage()
     {
-        var activeBoss = PresentBosses
+        // TODO: Sort by config order?
+        var activeBoss = ActiveBosses
             .FirstOrDefault(b => b is
-                { Disposed: false, Active: true }); // TODO: Pick more intelligently or multi-show
+                { Disposed: false, Shown: true }); // TODO: Pick more intelligently or multi-show
 
         if (activeBoss is null)
         {
@@ -82,9 +97,9 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
         var remaining = 20 - displaySegments;
 
         var builder = new StringBuilder();
-        if (activeBoss.Name is not null)
+        if (activeBoss.Config.Name is not null)
         {
-            builder.Append($"<font>{activeBoss.Name}</font><br>");
+            builder.Append($"<font>{activeBoss.Config.Name}</font><br>");
         }
 
         var color = Gradient.GetHpColor(hpPercentage);
