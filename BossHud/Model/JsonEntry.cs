@@ -53,7 +53,6 @@ public record JsonEntry
     /// Specifies event that starts displaying boss health
     /// </summary>
     [JsonPropertyName("showtrigger")]
-    [Unsupported]
     public JsonOutputDefinitionWithDelay? ShowTrigger { get; init; }
 
     /// <summary>
@@ -162,6 +161,7 @@ public record JsonEntry
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
             if (KillTrigger is not null) config.KillTrigger = KillTrigger.Parse(false);
+            if (ShowTrigger is not null) config.ShowTrigger = ShowTrigger.Parse(false);
 
             return config;
         }

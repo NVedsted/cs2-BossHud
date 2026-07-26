@@ -45,6 +45,9 @@ public class BasicTests
                             }
                         }
 
+                        Console.WriteLine(exception);
+                        Console.WriteLine(fileName);
+
                         return null;
                     }
                 })
@@ -59,6 +62,6 @@ public class BasicTests
             Console.WriteLine($"\t{keyValuePair.Key}: {keyValuePair.Value}");
         }
 
-        await Assert.That(success).IsEqualTo(740);
+        await Assert.That(success).IsEqualTo(742);
     }
 }

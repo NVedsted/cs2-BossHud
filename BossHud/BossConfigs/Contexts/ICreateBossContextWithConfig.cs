@@ -15,5 +15,6 @@ public interface ICreateBossContextWithConfig<out TConfig>
     public string? TemplateId { get; }
 
     public T GetEntity<T>(EntityIdentifier entityIdentifier) where T : NativeObject =>
-        entityIdentifier.WithTemplateId(TemplateId).Find()?.As<T>()!; // TODO: What if not found?
+        entityIdentifier.WithTemplateId(TemplateId).Find()?.As<T>() ??
+        throw new InvalidOperationException("Could not find!"); // TODO: What if not found?
 }

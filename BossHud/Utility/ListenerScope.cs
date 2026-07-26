@@ -34,6 +34,16 @@ public sealed class ListenerScope(BossHudPlugin plugin) : IDisposable
         plugin.HookSingleEntityOutput(entityInstance, outputName, handler);
     }
 
+    public void UnhookSingleEntityOutput(
+        CEntityInstance entityInstance,
+        string outputName,
+        EntityIO.EntityOutputHandler handler)
+    {
+        ThrowIfDisposed();
+        plugin.UnhookSingleEntityOutput(entityInstance, outputName, handler);
+        _singleEntityOutputHooks.Remove((entityInstance, outputName, handler));
+    }
+
     private readonly LinkedList<Timer> _timers = new();
 
     public void AddTimer(

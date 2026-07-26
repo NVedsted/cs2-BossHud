@@ -38,12 +38,17 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
     /// </summary>
     private bool _timedOut;
 
+    /// <summary>
+    /// Whether we are waiting for show trigger; this is false both if none is set or if it has yet to trigger.
+    /// </summary>
+    private bool _waitingForShowTrigger;
+
     // TODO: Pre-compute
     public bool Shown
     {
         get
         {
-            if (Config.HitMarkerOnly || _timedOut) return false;
+            if (Config.HitMarkerOnly || _timedOut || _waitingForShowTrigger) return false;
 
             // TODO: update max-health once shown?
             if (Config.MaxHp is not null && CurrentHealth > Config.MaxHp) return false;
@@ -71,6 +76,14 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
         // TODO: optimize?
         var killTriggerEntity = context.GetEntity<CEntityInstance>(Config.KillTrigger.EntityIdentifier);
         ListenerScope.HookSingleEntityOutput(killTriggerEntity, Config.KillTrigger.Output, OnKillTrigger);
+
+        if (Config.ShowTrigger is not null)
+        {
+            _plugin.Logger.LogInformation("Boss {BossName} will not show until its show trigger is triggered", Config.Name);
+            _waitingForShowTrigger = true;
+            var showTriggerEntity = context.GetEntity<CEntityInstance>(Config.ShowTrigger.EntityIdentifier);
+            ListenerScope.HookSingleEntityOutput(showTriggerEntity, Config.ShowTrigger.Output, OnShowTrigger);
+        }
 
         ListenerScope.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
         Update();
@@ -103,6 +116,28 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
     }
 
     protected abstract bool IsDeletedEntityBreaking(CEntityInstance entity);
+
+    private HookResult OnShowTrigger(CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay)
+    {
+        ListenerScope.UnhookSingleEntityOutput(caller, Config.ShowTrigger!.Output, OnShowTrigger);
+
+        void Callback()
+        {
+            _plugin.Logger.LogInformation("Boss {BossName} had its show trigger triggered", Config.Name);
+            _waitingForShowTrigger = false;
+        }
+
+        if (Config.ShowTrigger!.Delay is null)
+        {
+            Callback();
+        }
+        else
+        {
+            ListenerScope.AddTimer(Config.ShowTrigger.Delay.Value, Callback);
+        }
+
+        return HookResult.Continue;
+    }
 
     private HookResult OnKillTrigger(
         CEntityIOOutput output,

@@ -26,6 +26,8 @@ public abstract class BossConfig
 
     protected abstract OutputDefinitionWithDelay DefaultKillTrigger { get; }
 
+    public OutputDefinitionWithDelay? ShowTrigger { get; set; }
+
     public required EntityIdentifier MainIdentifier { get; init; }
 
     public bool ShowBeaten { get; set; } = true;
