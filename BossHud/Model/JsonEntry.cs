@@ -2,12 +2,13 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 using BossHud.BossConfigs;
+using BossHud.EntityIdentifiers;
 
 namespace BossHud.Model;
 
-public record Entry
+public record JsonEntry
 {
-    private static readonly PropertyInfo[] UnsupportedProps = typeof(Entry)
+    private static readonly PropertyInfo[] UnsupportedProps = typeof(JsonEntry)
         .GetProperties()
         .Where(p => p.GetCustomAttribute<UnsupportedAttribute>() != null)
         .ToArray();
@@ -46,28 +47,28 @@ public record Entry
     /// Specifies the event that triggers the boss
     /// </summary>
     [JsonPropertyName("trigger")]
-    public OutputDefinitionWithDelay? Trigger { get; init; }
+    public JsonOutputDefinitionWithDelay? Trigger { get; init; }
 
     /// <summary>
     /// Specifies event that starts displaying boss health
     /// </summary>
     [JsonPropertyName("showtrigger")]
     [Unsupported]
-    public OutputDefinitionWithDelay? ShowTrigger { get; init; }
+    public JsonOutputDefinitionWithDelay? ShowTrigger { get; init; }
 
     /// <summary>
     /// Specifies event that force kills the boss
     /// </summary>
     [JsonPropertyName("killtrigger")]
     [Unsupported]
-    public OutputDefinitionWithDelay? KillTrigger { get; init; }
+    public JsonOutputDefinitionWithDelay? KillTrigger { get; init; }
 
     /// <summary>
     /// Specifies event that is considered as damaging the boss
     /// </summary>
     [JsonPropertyName("hurttrigger")]
     [Unsupported]
-    public OutputDefinition? HurtTrigger { get; init; }
+    public JsonOutputDefinition? HurtTrigger { get; init; }
 
     /// <summary>
     /// Whether counter should be reversed
@@ -88,7 +89,7 @@ public record Entry
     public bool? HitmarkerOnly { get; init; }
 
     /// <summary>
-    /// Whether boss should should be displayed as no-bar hud variant
+    /// Whether boss should be displayed as no-bar hud variant
     /// </summary>
     [JsonPropertyName("minorhud")]
     [Unsupported]
@@ -159,9 +160,9 @@ public record Entry
 
         config.Name = Name;
 
-        if (Trigger is not null) config.Trigger = Trigger;
+        if (Trigger is not null) config.Trigger = Trigger.Parse();
 
-        if (ShowBeaten is not null) config.ShowBeaten =  ShowBeaten.Value;
+        if (ShowBeaten is not null) config.ShowBeaten = ShowBeaten.Value;
 
         return config;
     }
@@ -191,7 +192,7 @@ public record Entry
                     "Hammer ID not supported in breakable");
             }
 
-            return new BreakableBossConfig { BreakableName = Breakable };
+            return new BreakableBossConfig { BreakableIdentifier = Breakable.AsTargetNameEntityIdentifier() };
         }
 
         Debug.Assert(Counter is not null);
@@ -204,13 +205,17 @@ public record Entry
 
         return (Iterator, Backup) switch
         {
-            (null, null) => new SimpleCounterBossConfig { CounterName = Counter },
-            (not null, null) => new SegmentedCounterBossConfig { CounterName = Counter, IteratorName = Iterator },
+            (null, null) => new SimpleCounterBossConfig { CounterIdentifier = Counter.AsTargetNameEntityIdentifier() },
+            (not null, null) => new SegmentedCounterBossConfig
+            {
+                CounterIdentifier = Counter.AsTargetNameEntityIdentifier(),
+                IteratorIdentifier = Iterator.AsTargetNameEntityIdentifier()
+            },
             (not null, not null) => new SegmentedWithBackupCounterBossConfig
             {
-                CounterName = Counter,
-                IteratorName = Iterator,
-                BackupName = Backup
+                CounterIdentifier = Counter.AsTargetNameEntityIdentifier(),
+                IteratorIdentifier = Iterator.AsTargetNameEntityIdentifier(),
+                BackupIdentifier = Backup.AsTargetNameEntityIdentifier(),
             },
             (null, not null) => throw new InvalidOperationException(
                 "Backup cannot be set without iterator"), // TODO: name of boss

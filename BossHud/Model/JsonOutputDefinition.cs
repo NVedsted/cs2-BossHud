@@ -1,8 +1,10 @@
 ﻿using System.Text.Json.Serialization;
+using BossHud.BossConfigs;
+using BossHud.EntityIdentifiers;
 
 namespace BossHud.Model;
 
-public record OutputDefinition
+public record JsonOutputDefinition
 {
     /// <summary>
     /// Targetname/Hammerid of entity
@@ -15,4 +17,7 @@ public record OutputDefinition
     /// </summary>
     [JsonPropertyName("output")]
     public required string Output { get; init; }
+
+    public OutputDefinition Parse() => new()
+        { EntityIdentifier = Entity.AsTargetNameEntityIdentifier(), Output = Output };
 }

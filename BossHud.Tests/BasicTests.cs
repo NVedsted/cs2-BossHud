@@ -17,7 +17,7 @@ public class BasicTests
         foreach (var fileName in Directory.EnumerateFiles("../../../../configs"))
         {
             await using var stream = File.OpenRead(fileName);
-            var entries = await JsonSerializer.DeserializeAsync<Entry[]>(stream, new JsonSerializerOptions
+            var entries = await JsonSerializer.DeserializeAsync<JsonEntry[]>(stream, new JsonSerializerOptions
             {
                 TypeInfoResolver = BossHudJsonContext.Default,
                 ReadCommentHandling = JsonCommentHandling.Skip,

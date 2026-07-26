@@ -74,14 +74,9 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         float delay)
     {
         // TODO: account for delay?
-
-        var targetName = caller.Entity?.Name;
-
-        if (targetName is null) return HookResult.Continue;
-
         foreach (var bossConfig in _activeBossConfigs)
         {
-            if (targetName == bossConfig.Trigger.Entity && name == bossConfig.Trigger.Output)
+            if (bossConfig.Trigger.EntityIdentifier.Matches(caller) && name == bossConfig.Trigger.Output)
             {
                 bossConfig.SetupBoss(this);
             }
@@ -131,7 +126,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         {
             Logger.LogInformation("Loading config for {MapName}", mapName);
             using var stream = File.OpenRead(configName);
-            var entries = JsonSerializer.Deserialize<Entry[]>(stream, JsonSerializerOptions);
+            var entries = JsonSerializer.Deserialize<JsonEntry[]>(stream, JsonSerializerOptions);
 
             if (entries is null) throw new InvalidOperationException($"{configName} could not be parsed");
 

@@ -3,5 +3,5 @@ using BossHud.Model;
 
 namespace BossHud;
 
-[JsonSerializable(typeof(Entry[]))]
+[JsonSerializable(typeof(JsonEntry[]))]
 public partial class BossHudJsonContext : JsonSerializerContext;
