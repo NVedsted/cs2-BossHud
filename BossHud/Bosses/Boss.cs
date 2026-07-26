@@ -24,7 +24,7 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
 
     public bool Shown => true;
 
-    protected DamageTable? DamageTable { get; } = config.ShowBeaten ? new() : null;
+    protected DamageTable? DamageTable { get; } = config.ShowBeaten ? new(plugin) : null;
 
     public abstract void Initialize();
 
@@ -39,6 +39,7 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
     {
         if (_disposed) return;
 
+        DamageTable?.Dispose();
         ListenerScope.Dispose();
         plugin.BossManager.Unregister(this);
         GC.SuppressFinalize(this);
