@@ -28,15 +28,33 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     public int MaxHealth { get; protected set; }
 
+    /// <summary>
+    /// Timestamp of last time this boss was damaged.
+    /// </summary>
+    private long _lastDamaged;
+
+    /// <summary>
+    /// Whether this boss is currently timed out; cached to make timed-out bosses cheaper
+    /// </summary>
+    private bool _timedOut;
+
     // TODO: Pre-compute
     public bool Shown
     {
         get
         {
-            if (Config.HitMarkerOnly) return false;
+            if (Config.HitMarkerOnly || _timedOut) return false;
 
             // TODO: update max-health once shown?
             if (Config.MaxHp is not null && CurrentHealth > Config.MaxHp) return false;
+
+            if (Config.Timeout is not null &&
+                TimeProvider.System.GetElapsedTime(_lastDamaged).TotalSeconds > Config.Timeout.Value)
+            {
+                _timedOut = true;
+                _plugin.Logger.LogInformation("Boss {BossName} has timed out", Config.Name);
+                return false;
+            }
 
             return true;
         }
@@ -48,6 +66,8 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     public virtual void Initialize()
     {
+        _lastDamaged = TimeProvider.System.GetTimestamp();
+
         // TODO: optimize?
         var killTriggerEntity = context.GetEntity<CEntityInstance>(Config.KillTrigger.EntityIdentifier);
         ListenerScope.HookSingleEntityOutput(killTriggerEntity, Config.KillTrigger.Output, OnKillTrigger);
@@ -58,6 +78,13 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     protected void OnHit(CCSPlayerController player)
     {
+        _lastDamaged = TimeProvider.System.GetTimestamp();
+
+        if (_timedOut)
+        {
+            _timedOut = false;
+            _plugin.Logger.LogInformation("Boss {BossName} is no longer timed out", Config.Name);
+        }
 #if HITMARKER
         IHitMarkApi.Capability.Get()!.StartHitMark(player, false, null, null);
 #endif

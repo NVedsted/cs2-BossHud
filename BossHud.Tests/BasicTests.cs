@@ -59,6 +59,6 @@ public class BasicTests
             Console.WriteLine($"\t{keyValuePair.Key}: {keyValuePair.Value}");
         }
 
-        await Assert.That(success).IsEqualTo(720);
+        await Assert.That(success).IsEqualTo(731);
     }
 }

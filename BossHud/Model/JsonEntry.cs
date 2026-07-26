@@ -113,7 +113,6 @@ public record JsonEntry
     /// Specify time before boss health is hidden after taking no damage
     /// </summary>
     [JsonPropertyName("timeout")]
-    [Unsupported]
     public float? Timeout { get; init; }
 
     /// <summary>
@@ -160,6 +159,7 @@ public record JsonEntry
             if (ShowBeaten.HasValue) config.ShowBeaten = ShowBeaten.Value;
             if (HitmarkerOnly.HasValue) config.HitMarkerOnly = HitmarkerOnly.Value;
             if (MaxHp > 0.0) config.MaxHp = (int)MaxHp.Value;
+            if (Timeout > 0.0) config.Timeout = Timeout.Value;
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
             if (KillTrigger is not null) config.KillTrigger = KillTrigger.Parse(false);
