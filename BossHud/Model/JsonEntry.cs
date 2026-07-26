@@ -126,8 +126,7 @@ public record JsonEntry
     /// Specify amount of iterator segments to ADD to displayed health (negative to subtract)
     /// </summary>
     [JsonPropertyName("offsetiterator")]
-    [Unsupported]
-    public float? OffsetIterator { get; init; }
+    public float? IteratorOffset { get; init; }
 
     /// <summary>
     /// If the boss has more than this HP, it will not start showing on the HUD (0.0 = no limit)
@@ -220,10 +219,16 @@ public record JsonEntry
 
         if (ReverseCounter.HasValue) counterConfig.ReverseCounter = ReverseCounter.Value;
 
-        if (counterConfig is SegmentedWithBackupCounterBossConfig config)
+        if (counterConfig is SegmentedCounterBossConfig segmentedConfig)
+        {
+            if (IteratorOffset.HasValue && IteratorOffset != 0.0)
+                segmentedConfig.IteratorOffset = (int)IteratorOffset.Value;
+        }
+
+        if (counterConfig is SegmentedWithBackupCounterBossConfig withBackupConfig)
         {
             // TODO: Refactor unused detection
-            if (ReverseIterator.HasValue) config.ReverseIterator = ReverseIterator.Value;
+            if (ReverseIterator.HasValue) withBackupConfig.ReverseIterator = ReverseIterator.Value;
         }
 
         return counterConfig;

@@ -14,9 +14,9 @@ public class SegmentedCounterBoss<TConfig>(
 
     protected readonly CMathCounter Iterator = iterator;
 
-    protected int GetCurrentSegmentsLeft() => Config.ReverseIterator
+    protected int GetCurrentSegmentsLeft() => (Config.ReverseIterator
         ? (int)(Iterator.Max - Iterator.GetValue()) - 1
-        : (int)(Iterator.GetValue() - Iterator.Min) - 1;
+        : (int)(Iterator.GetValue() - Iterator.Min) - 1) + Config.IteratorOffset;
 
     protected override void Update()
     {

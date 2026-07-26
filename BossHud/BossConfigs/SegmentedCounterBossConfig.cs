@@ -9,6 +9,8 @@ public class SegmentedCounterBossConfig : BaseCounterBossConfig
 {
     public required EntityIdentifier IteratorIdentifier { get; init; }
 
+    public int IteratorOffset { get; set; }
+
     public bool ReverseIterator { get; set; } = false;
 
     protected override OutputDefinitionWithDelay DefaultKillTrigger => new()
