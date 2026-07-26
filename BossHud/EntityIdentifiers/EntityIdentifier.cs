@@ -21,17 +21,33 @@ public class EntityIdentifier
         _targetName = targetName;
     }
 
-    public static EntityIdentifier Parse(string identifier, bool templated) =>
-        (identifier.StartsWith('#'), templated) switch
-        {
-            (true, false) => new EntityIdentifier(Kind.HammerId, identifier[1..]),
-            (true, true) => throw new InvalidOperationException("HammerID cannot be templated"), // TODO: Catch
-            (false, false) => new EntityIdentifier(Kind.TargetName, identifier),
-            (false, true) => new EntityIdentifier(Kind.TemplatedTargetName, identifier),
-        };
+    public static EntityIdentifier Parse(string identifier) => identifier.StartsWith('#')
+        ? new EntityIdentifier(Kind.HammerId, identifier[1..])
+        : new EntityIdentifier(Kind.TargetName, identifier);
 
+    public EntityIdentifier AsTemplated(bool templated = true) => (templated, _kind) switch
+    {
+        (false, _) or (true, Kind.TemplatedTargetName) => this,
+        (true, Kind.TargetName) => new EntityIdentifier(Kind.TemplatedTargetName, _targetName),
+        (true, Kind.HammerId) => throw new InvalidOperationException("HammerID cannot be templated"),
+        (true, _) => throw new ArgumentOutOfRangeException()
+    };
 
-    public CEntityInstance? Get() => Utilities.GetAllEntities().FirstOrDefault(Matches);
+    public EntityIdentifier WithTemplateId(string? templateId) => (templateId, _kind) switch
+    {
+        (null, _) => this,
+        (var id, Kind.TargetName or Kind.TemplatedTargetName) =>
+            new EntityIdentifier(Kind.TargetName, $"{_targetName}_{id}"),
+        (_, Kind.HammerId) => this,
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public EntityIdentifier Validate(bool mustBeAbleToBeTemplated) =>
+        mustBeAbleToBeTemplated && _kind is Kind.HammerId
+            ? throw new InvalidOperationException("HammerID cannot be templated")
+            : this;
+
+    public CEntityInstance? Find() => Utilities.GetAllEntities().FirstOrDefault(Matches);
 
     public bool Matches(CEntityInstance other)
     {

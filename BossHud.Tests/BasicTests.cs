@@ -35,11 +35,14 @@ public class BasicTests
                     {
                         return e.Parse();
                     }
-                    catch (EntryPropertiesNotSupported exception)
+                    catch (BossConfigException exception)
                     {
-                        foreach (var property in exception.Properties)
+                        if (exception.InnerException is EntryPropertiesNotSupported propertiesNotSupported)
                         {
-                            unsupportedStats[property] = unsupportedStats.GetValueOrDefault(property) + 1;
+                            foreach (var property in propertiesNotSupported.Properties)
+                            {
+                                unsupportedStats[property] = unsupportedStats.GetValueOrDefault(property) + 1;
+                            }
                         }
 
                         return null;
@@ -56,6 +59,6 @@ public class BasicTests
             Console.WriteLine($"\t{keyValuePair.Key}: {keyValuePair.Value}");
         }
 
-        await Assert.That(success).IsEqualTo(515);
+        await Assert.That(success).IsEqualTo(540);
     }
 }

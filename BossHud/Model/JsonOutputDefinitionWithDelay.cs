@@ -13,5 +13,5 @@ public record JsonOutputDefinitionWithDelay : JsonOutputDefinition
     public float? Delay { get; init; }
 
     public new OutputDefinitionWithDelay Parse(bool templated) => new()
-        { EntityIdentifier = EntityIdentifier.Parse(Entity, templated), Output = Output, Delay = Delay };
+        { EntityIdentifier = EntityIdentifier.Parse(Entity).AsTemplated(templated), Output = Output, Delay = Delay };
 }

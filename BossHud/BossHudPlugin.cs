@@ -36,7 +36,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private bool _invalidMapConfig;
+    private ConfigState _mapConfigState = ConfigState.Valid;
 
     public BossHudPlugin()
     {
@@ -73,12 +73,11 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         CVariant value,
         float delay)
     {
-        // TODO: account for delay?
         foreach (var bossConfig in _activeBossConfigs)
         {
             if (bossConfig.Trigger.EntityIdentifier.Matches(caller) && name == bossConfig.Trigger.Output)
             {
-                bossConfig.SetupBoss(this);
+                bossConfig.SetupBoss(this, caller);
             }
         }
 
@@ -93,9 +92,14 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private HookResult EventRoundStart(EventRoundStart @event, GameEventInfo info)
     {
-        if (_invalidMapConfig)
+        switch (_mapConfigState)
         {
-            NotifyAdmins("The map configuration is not fully-supported; some bosses might not show as intended");
+            case ConfigState.Unsupported:
+                NotifyAdmins("The map configuration is not fully-supported; some bosses might not show as intended");
+                break;
+            case ConfigState.Broken:
+                NotifyAdmins("The map configuration is broken; some bosses might not show as intended");
+                break;
         }
 
         // Sometimes round end is not triggered properly.
@@ -118,7 +122,8 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private void OnMapStart(string mapName)
     {
-        _invalidMapConfig = false;
+        _activeBossConfigs = [];
+        _mapConfigState = ConfigState.Valid;
 
         var configName = Path.Combine(ConfigDirectory, $"maps/{mapName}.jsonc");
 
@@ -126,9 +131,26 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         {
             Logger.LogInformation("Loading config for {MapName}", mapName);
             using var stream = File.OpenRead(configName);
-            var entries = JsonSerializer.Deserialize<JsonEntry[]>(stream, JsonSerializerOptions);
 
-            if (entries is null) throw new InvalidOperationException($"{configName} could not be parsed");
+            JsonEntry[] entries;
+            try
+            {
+                var result = JsonSerializer.Deserialize<JsonEntry[]>(stream, JsonSerializerOptions);
+
+                if (result is null)
+                {
+                    Logger.LogError("{ConfigName} is empty", configName);
+                    _mapConfigState = ConfigState.Broken;
+                    return;
+                }
+
+                entries = result;
+            }
+            catch (JsonException exception)
+            {
+                Logger.LogError(exception, "Failed to parse {ConfigName}", configName);
+                return;
+            }
 
             _activeBossConfigs = entries.Select(c =>
                 {
@@ -136,11 +158,11 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     {
                         return c.Parse();
                     }
-                    catch (EntryNotSupportedException exception)
+                    catch (BossConfigException exception)
                     {
-                        _invalidMapConfig = true;
-                        Logger.LogError(exception,
-                            "A boss config for {MapName} uses unsupported configuration; ignoring", mapName);
+                        _mapConfigState = exception.ConfigState;
+                        Logger.LogError(exception, "A boss config for {MapName} could not be loaded (Boss: {BossName}, State: {State})",
+                            mapName, exception.BossName, exception.ConfigState);
                         return null;
                     }
                 })
@@ -208,6 +230,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         {
             timer.Kill();
         }
+
         _roundTimers.Clear();
     }
 

@@ -99,20 +99,19 @@ public record JsonEntry
     /// Whether boss can be triggered multiple times (multiple instances)
     /// </summary>
     [JsonPropertyName("multitrigger")]
-    [Unsupported]
-    public bool? MultiTrigger { get; init; }
+    public bool MultiTrigger { get; init; } = false;
 
     /// <summary>
     /// Whether boss is templated and has name fixup
     /// </summary>
     [JsonPropertyName("templated")]
-    public bool Templated { get; init; }
+    public bool Templated { get; init; } = false;
 
     /// <summary>
     /// Whether top boss damage should be displayed after boss death
     /// </summary>
     [JsonPropertyName("showbeaten")]
-    public bool? ShowBeaten { get; init; }
+    public bool ShowBeaten { get; init; } = true;
 
     /// <summary>
     /// Specify time before boss health is hidden after taking no damage
@@ -144,33 +143,41 @@ public record JsonEntry
 
     public BossConfig Parse()
     {
-        var unsupportedPropsSet = UnsupportedProps
-            .Where(p => p.GetValue(this) != null)
-            .Select(p =>
-                p.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? p.Name)
-            .ToArray();
-
-        if (unsupportedPropsSet.Length != 0)
+        try
         {
-            throw new EntryPropertiesNotSupported(unsupportedPropsSet);
+            var unsupportedPropsSet = UnsupportedProps
+                .Where(p => p.GetValue(this) != null)
+                .Select(p =>
+                    p.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? p.Name)
+                .ToArray();
+
+            if (unsupportedPropsSet.Length != 0)
+            {
+                throw new EntryPropertiesNotSupported(unsupportedPropsSet);
+            }
+
+            var config = ParseBaseConfig();
+
+            config.Name = Name;
+            config.Templated = Templated;
+            config.ShowBeaten = ShowBeaten;
+            config.MultiTrigger = MultiTrigger;
+
+            if (Trigger is not null) config.Trigger = Trigger.Parse(Templated);
+
+            return config;
         }
-
-        var config = ParseBaseConfig();
-
-        config.Name = Name;
-
-        if (Trigger is not null) config.Trigger = Trigger.Parse(Templated);
-
-        if (ShowBeaten is not null) config.ShowBeaten = ShowBeaten.Value;
-
-        return config;
+        catch (InvalidOperationException exception)
+        {
+            throw new BossConfigException(Name, exception);
+        }
     }
 
     private BossConfig ParseBaseConfig()
     {
         if (Breakable is not null && Counter is not null)
         {
-            throw new InvalidOperationException("Breakable and counter cannot both be set"); // TODO: Catch
+            throw new InvalidOperationException("Breakable and counter cannot both be set");
         }
 
         if (Breakable != null)
@@ -185,7 +192,7 @@ public record JsonEntry
                 throw new InvalidOperationException("Breakable and backup cannot both be set");
             }
 
-            return new BreakableBossConfig { BreakableIdentifier = EntityIdentifier.Parse(Breakable, Templated) };
+            return new BreakableBossConfig { MainIdentifier = EntityIdentifier.Parse(Breakable).Validate(Templated) };
         }
 
         Debug.Assert(Counter is not null);
@@ -194,35 +201,46 @@ public record JsonEntry
         {
             (null, null) => new SimpleCounterBossConfig
             {
-                CounterIdentifier = EntityIdentifier.Parse(Counter, Templated),
+                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(Templated),
             },
             (not null, null) => new SegmentedCounterBossConfig
             {
-                CounterIdentifier = EntityIdentifier.Parse(Counter, Templated),
-                IteratorIdentifier = EntityIdentifier.Parse(Iterator, Templated),
+                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(Templated),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(Templated),
             },
             (not null, not null) => new SegmentedWithBackupCounterBossConfig
             {
-                CounterIdentifier = EntityIdentifier.Parse(Counter, Templated),
-                IteratorIdentifier = EntityIdentifier.Parse(Iterator, Templated),
-                BackupIdentifier = EntityIdentifier.Parse(Backup, Templated),
+                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(Templated),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(Templated),
+                BackupIdentifier = EntityIdentifier.Parse(Backup).Validate(Templated),
             },
-            (null, not null) => throw new InvalidOperationException(
-                "Backup cannot be set without iterator"), // TODO: name of boss
+            (null, not null) => throw new InvalidOperationException("Backup cannot be set without iterator"),
         };
     }
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-public class UnsupportedAttribute : Attribute;
+public sealed class UnsupportedAttribute : Attribute;
 
-public abstract class EntryNotSupportedException(string message) : Exception(message);
+public abstract class EntryNotSupportedException(string message) : InvalidOperationException(message);
 
-public class BreakableWithIteratorNotSupportedException(string message) : EntryNotSupportedException(message);
+public sealed class BreakableWithIteratorNotSupportedException(string message) : EntryNotSupportedException(message);
 
-public class EntryPropertiesNotSupported(string[] properties)
+public sealed class EntryPropertiesNotSupported(string[] properties)
     : EntryNotSupportedException(
         $"Config contained the following unsupported properties: {string.Join(", ", properties)}")
 {
     public IEnumerable<string> Properties => properties;
+}
+
+public sealed class BossConfigException(string? bossName, Exception innerException)
+    : Exception($"Configuration of {bossName ?? "<no-name>"} is not valid", innerException)
+{
+    public string? BossName => bossName;
+
+    public ConfigState ConfigState { get; } = innerException switch
+    {
+        EntryNotSupportedException => ConfigState.Unsupported,
+        _ => ConfigState.Broken,
+    };
 }

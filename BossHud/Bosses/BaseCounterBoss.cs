@@ -3,18 +3,15 @@ using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public abstract class BaseCounterBoss(
-    BossConfig config,
-    BossHudPlugin plugin,
-    CMathCounter counter) : Boss(config, plugin)
+public abstract class BaseCounterBoss(CreateBossContext context) : Boss(context)
 {
     public sealed override BossType BossType => BossType.Hits;
 
-    protected CMathCounter Counter => counter;
+    protected readonly CMathCounter Counter = context.MainEntity.As<CMathCounter>();
 
     public override void Initialize()
     {
-        ListenerScope.HookSingleEntityOutput(counter, "OutValue", OnCounterOutValue);
+        ListenerScope.HookSingleEntityOutput(Counter, "OutValue", OnCounterOutValue);
         base.Initialize();
     }
 

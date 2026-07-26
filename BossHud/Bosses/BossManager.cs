@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
 using BossHud.BossConfigs;
+using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Logging;
 
 namespace BossHud.Bosses;
@@ -8,6 +9,8 @@ namespace BossHud.Bosses;
 public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 {
     private readonly ConcurrentDictionary<Boss, byte> _activeBosses = new();
+    private readonly ConcurrentDictionary<CEntityInstance, byte> _bossEntities = new();
+    private readonly HashSet<BossConfig> _bossesSeenThisRound = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private TaskCompletionSource? _waker;
     private bool _started;
@@ -16,30 +19,40 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     private IEnumerable<Boss> ActiveBosses => _activeBosses.Keys;
 
     // TODO: Should a boss be triggerable again on the same round if multi-trigger is off?
-    public readonly HashSet<BossConfig> BossesSeenThisRound = new(); // TODO: Move to simpler "round context"
 
     public string? BossMessage { get; private set; }
 
     public void Register(Boss boss)
     {
         _activeBosses.TryAdd(boss, 0);
+        _bossEntities.TryAdd(boss.MainEntity, 0);
         WakeIfNeeded();
     }
 
     public void Unregister(Boss boss)
     {
+        _bossEntities.TryRemove(boss.MainEntity, out _);
         _activeBosses.TryRemove(boss, out _);
     }
 
+    /// <summary>
+    /// Tries to mark a boss config as triggered for this round.
+    /// </summary>
+    /// <param name="config">The boss config</param>
+    /// <returns>Whether this is the first time</returns>
+    public bool TryMarkBossConfigAsTriggered(BossConfig config) => _bossesSeenThisRound.Add(config);
+
+    public bool IsBossEntity(CEntityInstance instance) => _bossEntities.ContainsKey(instance);
+
     public void CleanupRound()
     {
-        // TODO: needed as entity-removed event disposes? Perhaps good in any case.
         foreach (var activeBoss in ActiveBosses)
         {
             activeBoss.Dispose();
         }
 
-        BossesSeenThisRound.Clear();
+        _bossesSeenThisRound.Clear();
+        _bossEntities.Clear();
     }
 
     private void EnsureMessageUpdaterStarted()

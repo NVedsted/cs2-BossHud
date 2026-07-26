@@ -3,12 +3,8 @@ using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class SegmentedCounterBoss(
-    SegmentedCounterBossConfig config,
-    BossHudPlugin plugin,
-    CMathCounter counter,
-    CMathCounter iterator)
-    : BaseCounterBoss(config, plugin, counter)
+public sealed class SegmentedCounterBoss(CreateBossContext context, CMathCounter iterator)
+    : BaseCounterBoss(context)
 {
     private int _segmentHealth;
     private int _segmentsLefts;

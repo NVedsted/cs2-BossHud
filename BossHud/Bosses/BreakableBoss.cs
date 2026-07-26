@@ -3,30 +3,25 @@ using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class BreakableBoss(
-    BreakableBossConfig config,
-    BossHudPlugin plugin,
-    CBreakable breakable)
-    : Boss(config, plugin)
+public sealed class BreakableBoss(CreateBossContext context) : Boss(context)
 {
+    private readonly CBreakable _breakable = context.MainEntity.As<CBreakable>();
+
     public override BossType BossType => BossType.Hp;
 
     public override void Initialize()
     {
         ListenerScope.RegisterListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
-        ListenerScope.HookSingleEntityOutput(breakable, "OnBreak", OnOutputDefeated);
-        ListenerScope.HookSingleEntityOutput(breakable, "OnHealthChanged", OnOutputUpdate);
+        ListenerScope.HookSingleEntityOutput(_breakable, "OnBreak", OnOutputDefeated);
+        ListenerScope.HookSingleEntityOutput(_breakable, "OnHealthChanged", OnOutputUpdate);
         base.Initialize();
     }
 
-    protected override bool IsDeletedEntityBreaking(CEntityInstance entity)
-    {
-        return entity == breakable;
-    }
+    protected override bool IsDeletedEntityBreaking(CEntityInstance entity) => entity == _breakable;
 
     private void OnEntityTakeDamagePost(CBaseEntity entity, CTakeDamageInfo info, CTakeDamageResult result)
     {
-        if (entity != breakable) return;
+        if (entity != _breakable) return;
 
         if (!info.Attacker.Value!.IsPlayerPawn()) return;
 
@@ -37,7 +32,7 @@ public sealed class BreakableBoss(
 
     protected override void Update()
     {
-        CurrentHealth = breakable.Health;
+        CurrentHealth = _breakable.Health;
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
 }

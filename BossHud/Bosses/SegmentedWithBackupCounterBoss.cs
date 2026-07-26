@@ -4,12 +4,10 @@ using CounterStrikeSharp.API.Core;
 namespace BossHud.Bosses;
 
 public sealed class SegmentedWithBackupCounterBoss(
-    SegmentedWithBackupCounterBossConfig config,
-    BossHudPlugin plugin,
-    CMathCounter counter,
+    CreateBossContext context,
     CMathCounter iterator,
     CMathCounter backup)
-    : BaseCounterBoss(config, plugin, counter)
+    : BaseCounterBoss(context)
 {
     protected override void Update()
     {

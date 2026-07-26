@@ -1,13 +1,8 @@
 ﻿using BossHud.BossConfigs;
-using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class SimpleCounterBoss(
-    SimpleCounterBossConfig config,
-    BossHudPlugin plugin,
-    CMathCounter counter)
-    : BaseCounterBoss(config, plugin, counter)
+public sealed class SimpleCounterBoss(CreateBossContext context) : BaseCounterBoss(context)
 {
     protected override void Update()
     {

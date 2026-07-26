@@ -9,13 +9,14 @@ using CS2_HitMarkApi;
 
 namespace BossHud.Bosses;
 
-public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposable
+public abstract class Boss(CreateBossContext context) : IDisposable
 {
     private bool _disposed;
+    private readonly BossHudPlugin _plugin = context.Plugin;
 
-    protected readonly ListenerScope ListenerScope = new(plugin);
+    protected readonly ListenerScope ListenerScope = new(context.Plugin);
 
-    public BossConfig Config => config;
+    public BossConfig Config => context.Config;
 
     public abstract BossType BossType { get; }
 
@@ -25,7 +26,9 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
 
     public bool Shown => true;
 
-    protected DamageTable? DamageTable { get; } = config.ShowBeaten ? new(plugin) : null;
+    public CEntityInstance MainEntity { get; } = context.MainEntity;
+
+    protected DamageTable? DamageTable { get; } = context.Config.ShowBeaten ? new(context.Plugin) : null;
 
     public virtual void Initialize()
     {
@@ -46,10 +49,10 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
 
         DamageTable?.Dispose();
         ListenerScope.Dispose();
-        plugin.BossManager.Unregister(this);
+        _plugin.BossManager.Unregister(this);
         GC.SuppressFinalize(this);
         _disposed = true;
-        plugin.Logger.LogInformation("Boss {BossName} was removed", Config.Name);
+        _plugin.Logger.LogInformation("Boss {BossName} was removed", Config.Name);
     }
 
     protected abstract bool IsDeletedEntityBreaking(CEntityInstance entity);
@@ -82,7 +85,7 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
 
     private void Defeated()
     {
-        plugin.Logger.LogInformation("Boss {BossName} has been defeated", Config.Name);
+        _plugin.Logger.LogInformation("Boss {BossName} has been defeated", Config.Name);
         DamageTable?.Print(BossType, Config.Name);
         Dispose();
     }
