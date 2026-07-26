@@ -106,8 +106,7 @@ public record JsonEntry
     /// Whether boss is templated and has name fixup
     /// </summary>
     [JsonPropertyName("templated")]
-    [Unsupported]
-    public bool? Templated { get; init; }
+    public bool Templated { get; init; }
 
     /// <summary>
     /// Whether top boss damage should be displayed after boss death
@@ -160,7 +159,7 @@ public record JsonEntry
 
         config.Name = Name;
 
-        if (Trigger is not null) config.Trigger = Trigger.Parse();
+        if (Trigger is not null) config.Trigger = Trigger.Parse(Templated);
 
         if (ShowBeaten is not null) config.ShowBeaten = ShowBeaten.Value;
 
@@ -186,24 +185,27 @@ public record JsonEntry
                 throw new InvalidOperationException("Breakable and backup cannot both be set");
             }
 
-            return new BreakableBossConfig { BreakableIdentifier = EntityIdentifier.Parse(Breakable) };
+            return new BreakableBossConfig { BreakableIdentifier = EntityIdentifier.Parse(Breakable, Templated) };
         }
 
         Debug.Assert(Counter is not null);
 
         return (Iterator, Backup) switch
         {
-            (null, null) => new SimpleCounterBossConfig { CounterIdentifier = EntityIdentifier.Parse(Counter) },
+            (null, null) => new SimpleCounterBossConfig
+            {
+                CounterIdentifier = EntityIdentifier.Parse(Counter, Templated),
+            },
             (not null, null) => new SegmentedCounterBossConfig
             {
-                CounterIdentifier = EntityIdentifier.Parse(Counter),
-                IteratorIdentifier = EntityIdentifier.Parse(Iterator)
+                CounterIdentifier = EntityIdentifier.Parse(Counter, Templated),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator, Templated),
             },
             (not null, not null) => new SegmentedWithBackupCounterBossConfig
             {
-                CounterIdentifier = EntityIdentifier.Parse(Counter),
-                IteratorIdentifier = EntityIdentifier.Parse(Iterator),
-                BackupIdentifier = EntityIdentifier.Parse(Backup),
+                CounterIdentifier = EntityIdentifier.Parse(Counter, Templated),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator, Templated),
+                BackupIdentifier = EntityIdentifier.Parse(Backup, Templated),
             },
             (null, not null) => throw new InvalidOperationException(
                 "Backup cannot be set without iterator"), // TODO: name of boss

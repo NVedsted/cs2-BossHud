@@ -8,6 +8,7 @@ public class EntityIdentifier
     private enum Kind
     {
         TargetName,
+        TemplatedTargetName,
         HammerId,
     }
 
@@ -20,9 +21,15 @@ public class EntityIdentifier
         _targetName = targetName;
     }
 
-    public static EntityIdentifier Parse(string identifier) => identifier.StartsWith('#')
-        ? new EntityIdentifier(Kind.HammerId, identifier[1..])
-        : new EntityIdentifier(Kind.TargetName, identifier);
+    public static EntityIdentifier Parse(string identifier, bool templated) =>
+        (identifier.StartsWith('#'), templated) switch
+        {
+            (true, false) => new EntityIdentifier(Kind.HammerId, identifier[1..]),
+            (true, true) => throw new InvalidOperationException("HammerID cannot be templated"), // TODO: Catch
+            (false, false) => new EntityIdentifier(Kind.TargetName, identifier),
+            (false, true) => new EntityIdentifier(Kind.TemplatedTargetName, identifier),
+        };
+
 
     public CEntityInstance? Get() => Utilities.GetAllEntities().FirstOrDefault(Matches);
 
@@ -31,6 +38,8 @@ public class EntityIdentifier
         return _kind switch
         {
             Kind.TargetName => other.Entity?.Name == _targetName,
+            Kind.TemplatedTargetName => other.Entity?.Name == _targetName ||
+                                        (other.Entity?.Name?.StartsWith(_targetName) ?? false), // Name can be null!
             Kind.HammerId => other.As<CBaseEntity>().UniqueHammerID == _targetName,
             _ => throw new ArgumentOutOfRangeException()
         };

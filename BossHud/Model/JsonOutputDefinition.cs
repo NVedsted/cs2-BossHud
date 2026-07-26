@@ -18,6 +18,6 @@ public record JsonOutputDefinition
     [JsonPropertyName("output")]
     public required string Output { get; init; }
 
-    public OutputDefinition Parse() => new()
-        { EntityIdentifier = EntityIdentifier.Parse(Entity), Output = Output };
+    public OutputDefinition Parse(bool templated) => new()
+        { EntityIdentifier = EntityIdentifier.Parse(Entity, templated), Output = Output };
 }
