@@ -1,49 +1,57 @@
 ﻿using BossHud.Bosses;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Translations;
 
 namespace BossHud;
 
 public sealed class DamageTable
 {
-    private class Entry
+    private class EntryData
     {
-        public float Dmg { get; set; }
+        public required CCSPlayerController Player { get; init; }
+
+        public int Dmg { get; set; }
 
         public int Hits { get; set; }
     }
 
     // TODO: reset on disconnect
-    private readonly Entry?[] _damageTable = new Entry?[64];
+    private readonly EntryData?[] _damageTable = new EntryData?[64];
 
-    public void AddDamage(CCSPlayerController player, float damage)
+    public void AddDamage(CCSPlayerController player, int damage)
     {
-        _damageTable[player.Slot] ??= new Entry();
-        _damageTable[player.Slot]!.Dmg += damage;
-        _damageTable[player.Slot]!.Hits++;
+        var entry = _damageTable[player.Slot] ??= new EntryData
+        {
+            Player = player,
+        };
+        entry.Dmg += damage;
+        entry.Hits++;
     }
 
-    public void Print(BossType bossType)
+    public void Print(BossType bossType, string? bossName)
     {
-        foreach (var (dmg, slot) in _damageTable.Select((f, i) => (f, i)))
+        const int showTopCount = 5;
+
+        var leaderboard = _damageTable.OfType<EntryData>()
+            .Where(e => e.Player.IsValid)
+            .OrderByDescending(entry => entry.Dmg)
+            .Select((entry, index) => new
+                { Rank = index + 1, entry.Player, entry.Player.PlayerName, entry.Dmg, entry.Hits })
+            .ToArray();
+
+        foreach (var row in TopDamageTable.BuildTopDamageTable(
+                     bossType,
+                     bossName,
+                     leaderboard.Take(showTopCount).Select(e => (Name: e.PlayerName, e.Dmg, e.Hits))))
         {
-            if (dmg is null) continue;
+            Server.PrintToChatAll(row.ReplaceColorTags());
+        }
 
-            var player = Utilities.GetPlayerFromSlot(slot);
-
-            if (player is null) continue;
-
-            switch (bossType)
-            {
-                case BossType.Hits:
-                    Server.PrintToChatAll($"{player.PlayerName} - {dmg.Hits} hits");
-                    break;
-                case BossType.Hp:
-                    Server.PrintToChatAll($"{player.PlayerName} - {dmg.Dmg} dmg ({dmg.Hits} hits)");
-                    break;
-                default:
-                    throw new InvalidOperationException("Unknown boss type");
-            }
+        foreach (var e in leaderboard.Skip(showTopCount))
+        {
+            e.Player.PrintToChat(TopDamageTable.BuildTopDamageRow(bossType, e.Rank, e.PlayerName, e.Dmg, e.Hits)
+                .ReplaceColorTags());
         }
     }
 }

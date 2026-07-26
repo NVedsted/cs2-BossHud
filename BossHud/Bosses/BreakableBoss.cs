@@ -69,7 +69,7 @@ public sealed class BreakableBoss(
 
     private void PostDamage(CCSPlayerController player, float damage)
     {
-        DamageTable.AddDamage(player, damage);
+        DamageTable.AddDamage(player, (int)damage);
         OnHit(player);
     }
 }
