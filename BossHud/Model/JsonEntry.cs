@@ -60,7 +60,6 @@ public record JsonEntry
     /// Specifies event that force kills the boss
     /// </summary>
     [JsonPropertyName("killtrigger")]
-    [Unsupported]
     public JsonOutputDefinitionWithDelay? KillTrigger { get; init; }
 
     /// <summary>
@@ -164,6 +163,7 @@ public record JsonEntry
             if (MaxHp > 0.0) config.MaxHp = (int)MaxHp.Value;
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
+            if (KillTrigger is not null) config.KillTrigger = KillTrigger.Parse(false);
 
             return config;
         }

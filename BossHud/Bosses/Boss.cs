@@ -47,6 +47,9 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     public virtual void Initialize()
     {
+        var killTriggerEntity = context.GetEntity<CEntityInstance>(Config.KillTrigger.EntityIdentifier); // TODO: optimize?
+        ListenerScope.HookSingleEntityOutput(killTriggerEntity, Config.KillTrigger.Output, OnKillTrigger);
+
         ListenerScope.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
         Update();
     }
@@ -72,7 +75,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     protected abstract bool IsDeletedEntityBreaking(CEntityInstance entity);
 
-    protected HookResult OnOutputDefeated(
+    private HookResult OnKillTrigger(
         CEntityIOOutput output,
         string name,
         CEntityInstance activator,
@@ -80,7 +83,15 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
         CVariant value,
         float delay)
     {
-        Server.NextFrame(Defeated);
+        if (Config.KillTrigger.Delay is null)
+        {
+            Server.NextFrame(Defeated);
+        }
+        else
+        {
+            ListenerScope.AddTimer(Config.KillTrigger.Delay.Value, Defeated);
+        }
+
         return HookResult.Continue;
     }
 

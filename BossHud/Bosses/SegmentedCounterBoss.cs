@@ -15,8 +15,8 @@ public class SegmentedCounterBoss<TConfig>(
     protected readonly CMathCounter Iterator = iterator;
 
     protected int GetCurrentSegmentsLeft() => Config.ReverseIterator
-        ? (int)(Iterator.GetValue() - Iterator.Min) - 1
-        : (int)(Iterator.Max - Iterator.GetValue()) - 1;
+        ? (int)(Iterator.Max - Iterator.GetValue()) - 1
+        : (int)(Iterator.GetValue() - Iterator.Min) - 1;
 
     protected override void Update()
     {
@@ -36,7 +36,6 @@ public class SegmentedCounterBoss<TConfig>(
     public override void Initialize()
     {
         ListenerScope.HookSingleEntityOutput(Iterator, "OutValue", OnOutputUpdate);
-        ListenerScope.HookSingleEntityOutput(Iterator, "OnHitMin", OnOutputDefeated);
         base.Initialize();
     }
 

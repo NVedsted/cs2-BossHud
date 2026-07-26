@@ -11,10 +11,4 @@ public sealed class SimpleCounterBoss(ICreateBossContextWithConfig<SimpleCounter
         CurrentHealth = (int)(Counter.GetValue() - Counter.Min);
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
-
-    public override void Initialize()
-    {
-        ListenerScope.HookSingleEntityOutput(Counter, "OnHitMin", OnOutputDefeated);
-        base.Initialize();
-    }
 }

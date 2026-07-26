@@ -14,7 +14,6 @@ public sealed class BreakableBoss(ICreateBossContextWithConfig<BreakableBossConf
     public override void Initialize()
     {
         ListenerScope.RegisterListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
-        ListenerScope.HookSingleEntityOutput(_breakable, "OnBreak", OnOutputDefeated);
         ListenerScope.HookSingleEntityOutput(_breakable, "OnHealthChanged", OnOutputUpdate);
         base.Initialize();
     }

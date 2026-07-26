@@ -11,5 +11,11 @@ public sealed class BreakableBossConfig : BossConfig
         Output = "OnHealthChanged"
     };
 
+    protected override OutputDefinitionWithDelay DefaultKillTrigger => new()
+    {
+        EntityIdentifier = MainIdentifier.AsTemplated(Templated),
+        Output = "OnBreak"
+    };
+
     protected override IBoss CreateBoss(CreateBossContext context) => new BreakableBoss(context.WithConfig(this));
 }

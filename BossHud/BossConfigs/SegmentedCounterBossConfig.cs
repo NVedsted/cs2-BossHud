@@ -11,6 +11,12 @@ public class SegmentedCounterBossConfig : BaseCounterBossConfig
 
     public bool ReverseIterator { get; set; } = false;
 
+    protected override OutputDefinitionWithDelay DefaultKillTrigger => new()
+    {
+        EntityIdentifier = IteratorIdentifier.AsTemplated(Templated),
+        Output = ReverseIterator ? "OnHitMax" : "OnHitMin",
+    };
+
     protected override IBoss CreateBoss(CreateBossContext context) =>
         new SegmentedCounterBoss<SegmentedCounterBossConfig>(
             context.WithConfig(this),

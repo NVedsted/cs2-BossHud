@@ -18,6 +18,14 @@ public abstract class BossConfig
 
     protected abstract OutputDefinitionWithDelay DefaultTrigger { get; }
 
+    public OutputDefinitionWithDelay KillTrigger
+    {
+        get => field ??= DefaultKillTrigger;
+        set;
+    }
+
+    protected abstract OutputDefinitionWithDelay DefaultKillTrigger { get; }
+
     public required EntityIdentifier MainIdentifier { get; init; }
 
     public bool ShowBeaten { get; set; } = true;
