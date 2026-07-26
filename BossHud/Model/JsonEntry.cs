@@ -119,7 +119,6 @@ public record JsonEntry
     /// Specify amount of health to ADD to displayed health (negative to subtract)
     /// </summary>
     [JsonPropertyName("offset")]
-    [Unsupported]
     public float? Offset { get; init; }
 
     /// <summary>
@@ -159,6 +158,7 @@ public record JsonEntry
             if (HitmarkerOnly.HasValue) config.HitMarkerOnly = HitmarkerOnly.Value;
             if (MaxHp > 0.0) config.MaxHp = (int)MaxHp.Value;
             if (Timeout > 0.0) config.Timeout = Timeout.Value;
+            if (Offset.HasValue) config.Offset = (int)Offset.Value;
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
             if (KillTrigger is not null) config.KillTrigger = KillTrigger.Parse(false);

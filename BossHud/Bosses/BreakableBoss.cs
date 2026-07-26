@@ -33,7 +33,7 @@ public sealed class BreakableBoss(ICreateBossContextWithConfig<BreakableBossConf
 
     protected override void Update()
     {
-        CurrentHealth = _breakable.Health;
+        CurrentHealth = _breakable.Health + Config.Offset;
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
 }

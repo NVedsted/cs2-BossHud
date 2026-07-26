@@ -40,6 +40,8 @@ public abstract class BossConfig
 
     public float? Timeout { get; set; }
 
+    public int Offset { get; set; }
+
     public void SetupBoss(BossHudPlugin plugin, CEntityInstance caller)
     {
         // Mark immediately as seen to not spam timers.

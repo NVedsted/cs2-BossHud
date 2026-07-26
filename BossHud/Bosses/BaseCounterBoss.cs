@@ -20,7 +20,7 @@ public abstract class BaseCounterBoss<TBossConfig>(ICreateBossContextWithConfig<
 
     protected int GetCounterValue() => Config.ReverseCounter
         ? (int)(_counter.Max - _counter.GetValue())
-        : (int)(_counter.GetValue() - _counter.Min);
+        : (int)(_counter.GetValue() - _counter.Min) + Config.Offset;
 
     protected override bool IsDeletedEntityBreaking(CEntityInstance entity)
     {
