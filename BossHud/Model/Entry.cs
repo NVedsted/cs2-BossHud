@@ -40,7 +40,6 @@ public record Entry
     /// Targetname/Hammerid of hp backup
     /// </summary>
     [JsonPropertyName("backup")]
-    [Unsupported]
     public string? Backup { get; init; }
 
     /// <summary>
@@ -180,6 +179,11 @@ public record Entry
                 throw new BreakableWithIteratorNotSupportedException("Breakable with iterator is not supported");
             }
 
+            if (Backup is not null)
+            {
+                throw new InvalidOperationException("Breakable and backup cannot both be set");
+            }
+
             if (Breakable.StartsWith('#'))
             {
                 throw new HammerIdNotSupportedException(
@@ -197,9 +201,19 @@ public record Entry
                 "Hammer ID not supported in counter");
         }
 
-        return Iterator != null
-            ? new SegmentedCounterBossConfig { CounterName = Counter, IteratorName = Iterator }
-            : new SimpleCounterBossConfig { CounterName = Counter };
+        return (Iterator, Backup) switch
+        {
+            (null, null) => new SimpleCounterBossConfig { CounterName = Counter },
+            (not null, null) => new SegmentedCounterBossConfig { CounterName = Counter, IteratorName = Iterator },
+            (not null, not null) => new SegmentedWithBackupCounterBossConfig
+            {
+                CounterName = Counter,
+                IteratorName = Iterator,
+                BackupName = Backup
+            },
+            (null, not null) => throw new InvalidOperationException(
+                "Backup cannot be set without iterator"), // TODO: name of boss
+        };
     }
 }
 
