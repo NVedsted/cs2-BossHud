@@ -10,16 +10,14 @@ public sealed class BreakableBoss(
     CBreakable breakable)
     : Boss(config, plugin)
 {
-    private readonly BossHudPlugin _plugin = plugin;
     public override BossType BossType => BossType.Hp;
-
 
     public override void Initialize()
     {
-        _plugin.RegisterListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
-        _plugin.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
-        _plugin.HookSingleEntityOutput(breakable, "OnBreak", OnBreak);
-        _plugin.HookSingleEntityOutput(breakable, "OnHealthChanged", OnHealthChanged);
+        ListenerScope.RegisterListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
+        ListenerScope.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
+        ListenerScope.HookSingleEntityOutput(breakable, "OnBreak", OnBreak);
+        ListenerScope.HookSingleEntityOutput(breakable, "OnHealthChanged", OnHealthChanged);
         Update();
     }
 
@@ -49,15 +47,6 @@ public sealed class BreakableBoss(
         if (!info.Attacker.Value!.IsPlayerPawn()) return;
 
         PostDamage(info.Attacker.Value!.As<CCSPlayerPawn>().Controller.Value!.As<CCSPlayerController>(), info.Damage);
-    }
-
-    public override void Dispose()
-    {
-        _plugin.RemoveListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
-        _plugin.RemoveListener<Listeners.OnEntityTakeDamagePost>(OnEntityTakeDamagePost);
-        _plugin.UnhookSingleEntityOutput(breakable, "OnBreak", OnBreak);
-        _plugin.UnhookSingleEntityOutput(breakable, "OnHealthChanged", OnHealthChanged);
-        base.Dispose();
     }
 
     private HookResult OnBreak(

@@ -83,8 +83,7 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     {
         // TODO: Sort by config order?
         var activeBoss = ActiveBosses
-            .FirstOrDefault(b => b is
-                { Disposed: false, Shown: true }); // TODO: Pick more intelligently or multi-show
+            .FirstOrDefault(b => b.Shown); // TODO: Pick more intelligently or multi-show
 
         if (activeBoss is null)
         {

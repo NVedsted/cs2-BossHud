@@ -10,8 +10,6 @@ public sealed class SimpleCounterBoss(
     CMathCounter counter)
     : Boss(config, plugin)
 {
-    private readonly BossHudPlugin _plugin = plugin;
-
     private void Update()
     {
         CurrentHealth = (int)counter.GetValue();
@@ -35,9 +33,9 @@ public sealed class SimpleCounterBoss(
 
     public override void Initialize()
     {
-        _plugin.HookSingleEntityOutput(counter, "OutValue", OnCounterOutValue);
-        _plugin.HookSingleEntityOutput(counter, "OnHitMin", OnCounterHitMin);
-        _plugin.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
+        ListenerScope.HookSingleEntityOutput(counter, "OutValue", OnCounterOutValue);
+        ListenerScope.HookSingleEntityOutput(counter, "OnHitMin", OnCounterHitMin);
+        ListenerScope.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
         Update();
     }
 
@@ -75,13 +73,5 @@ public sealed class SimpleCounterBoss(
         PostDamage(player);
 
         return HookResult.Continue;
-    }
-
-    public override void Dispose()
-    {
-        _plugin.UnhookSingleEntityOutput(counter, "OutValue", OnCounterOutValue);
-        _plugin.UnhookSingleEntityOutput(counter, "OnHitMin", OnCounterHitMin);
-        _plugin.RemoveListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
-        base.Dispose();
     }
 }
