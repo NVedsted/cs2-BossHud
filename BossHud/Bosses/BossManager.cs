@@ -8,7 +8,7 @@ namespace BossHud.Bosses;
 
 public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 {
-    private readonly ConcurrentDictionary<Boss, byte> _activeBosses = new();
+    private readonly ConcurrentDictionary<IBoss, byte> _activeBosses = new();
     private readonly ConcurrentDictionary<CEntityInstance, byte> _bossEntities = new();
     private readonly HashSet<BossConfig> _bossesSeenThisRound = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -16,20 +16,20 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     private bool _started;
     private bool _disposed;
 
-    private IEnumerable<Boss> ActiveBosses => _activeBosses.Keys;
+    private IEnumerable<IBoss> ActiveBosses => _activeBosses.Keys;
 
     // TODO: Should a boss be triggerable again on the same round if multi-trigger is off?
 
     public string? BossMessage { get; private set; }
 
-    public void Register(Boss boss)
+    public void Register(IBoss boss)
     {
         _activeBosses.TryAdd(boss, 0);
         _bossEntities.TryAdd(boss.MainEntity, 0);
         WakeIfNeeded();
     }
 
-    public void Unregister(Boss boss)
+    public void Unregister(IBoss boss)
     {
         _bossEntities.TryRemove(boss.MainEntity, out _);
         _activeBosses.TryRemove(boss, out _);

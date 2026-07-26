@@ -1,14 +1,18 @@
+using BossHud.BossConfigs.Contexts;
 using BossHud.Bosses;
 using BossHud.EntityIdentifiers;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud.BossConfigs;
 
-public sealed class SegmentedCounterBossConfig : BaseCounterBossConfig
+public class SegmentedCounterBossConfig : BaseCounterBossConfig
 {
     public required EntityIdentifier IteratorIdentifier { get; init; }
 
-    protected override BaseCounterBoss CreateBoss(CreateBossContext context) => new SegmentedCounterBoss(
-        context,
-        context.GetEntity<CMathCounter>(IteratorIdentifier));
+    public bool ReverseIterator { get; set; } = false;
+
+    protected override IBoss CreateBoss(CreateBossContext context) =>
+        new SegmentedCounterBoss<SegmentedCounterBossConfig>(
+            context.WithConfig(this),
+            context.GetEntity<CMathCounter>(IteratorIdentifier));
 }

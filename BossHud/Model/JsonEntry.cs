@@ -81,7 +81,6 @@ public record JsonEntry
     /// Whether iterator should be reversed
     /// </summary>
     [JsonPropertyName("reverseiterator")]
-    [Unsupported]
     public bool? ReverseIterator { get; init; }
 
     [JsonPropertyName("hitmarkeronly")]
@@ -200,7 +199,7 @@ public record JsonEntry
 
         Debug.Assert(Counter is not null);
 
-        return (Iterator, Backup) switch
+        BaseCounterBossConfig counterConfig =  (Iterator, Backup) switch
         {
             (null, null) => new SimpleCounterBossConfig
             {
@@ -219,6 +218,14 @@ public record JsonEntry
             },
             (null, not null) => throw new InvalidOperationException("Backup cannot be set without iterator"),
         };
+
+        if (counterConfig is SegmentedWithBackupCounterBossConfig config)
+        {
+            // TODO: Refactor unused detection
+            if (ReverseIterator.HasValue) config.ReverseIterator = ReverseIterator.Value;
+        }
+
+        return counterConfig;
     }
 }
 

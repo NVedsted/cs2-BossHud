@@ -1,19 +1,20 @@
 ﻿using BossHud.BossConfigs;
+using BossHud.BossConfigs.Contexts;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
 public sealed class SegmentedWithBackupCounterBoss(
-    CreateBossContext context,
+    ICreateBossContextWithConfig<SegmentedWithBackupCounterBossConfig> context,
     CMathCounter iterator,
     CMathCounter backup)
-    : BaseCounterBoss(context)
+    : SegmentedCounterBoss<SegmentedWithBackupCounterBossConfig>(context, iterator)
 {
     protected override void Update()
     {
         var currentSegmentHealth = (int)(Counter.GetValue() - Counter.Min);
         var segmentHealth = (int)backup.GetValue();
-        var segmentsLeft = (int)(iterator.GetValue() - iterator.Min) - 1;
+        var segmentsLeft = GetCurrentSegmentsLeft();
 
         CurrentHealth = segmentHealth * segmentsLeft + currentSegmentHealth;
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
@@ -21,14 +22,12 @@ public sealed class SegmentedWithBackupCounterBoss(
 
     public override void Initialize()
     {
-        ListenerScope.HookSingleEntityOutput(iterator, "OutValue", OnOutputUpdate);
         ListenerScope.HookSingleEntityOutput(backup, "OutValue", OnOutputUpdate);
-        ListenerScope.HookSingleEntityOutput(iterator, "OnHitMin", OnOutputDefeated);
         base.Initialize();
     }
 
     protected override bool IsDeletedEntityBreaking(CEntityInstance entity)
     {
-        return base.IsDeletedEntityBreaking(entity) || entity == iterator || entity == backup;
+        return base.IsDeletedEntityBreaking(entity) || entity == Iterator || entity == backup;
     }
 }

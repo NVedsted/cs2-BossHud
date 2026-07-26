@@ -1,4 +1,5 @@
 ﻿using BossHud.BossConfigs;
+using BossHud.BossConfigs.Contexts;
 using BossHud.Utility;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -9,14 +10,17 @@ using CS2_HitMarkApi;
 
 namespace BossHud.Bosses;
 
-public abstract class Boss(CreateBossContext context) : IDisposable
+public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> context) : IBoss
+    where TConfig : BossConfig
 {
     private bool _disposed;
     private readonly BossHudPlugin _plugin = context.Plugin;
 
     protected readonly ListenerScope ListenerScope = new(context.Plugin);
 
-    public BossConfig Config => context.Config;
+    BossConfig IBoss.Config => Config;
+
+    protected TConfig Config => context.Config;
 
     public abstract BossType BossType { get; }
 
@@ -24,7 +28,7 @@ public abstract class Boss(CreateBossContext context) : IDisposable
 
     public int MaxHealth { get; protected set; }
 
-    public bool Shown { get;  } = !context.Config.HitMarkerOnly;
+    public bool Shown { get; } = !context.Config.HitMarkerOnly;
 
     public CEntityInstance MainEntity { get; } = context.MainEntity;
 

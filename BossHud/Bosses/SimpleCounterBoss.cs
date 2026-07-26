@@ -1,8 +1,10 @@
 ﻿using BossHud.BossConfigs;
+using BossHud.BossConfigs.Contexts;
 
 namespace BossHud.Bosses;
 
-public sealed class SimpleCounterBoss(CreateBossContext context) : BaseCounterBoss(context)
+public sealed class SimpleCounterBoss(ICreateBossContextWithConfig<SimpleCounterBossConfig> context)
+    : BaseCounterBoss<SimpleCounterBossConfig>(context)
 {
     protected override void Update()
     {

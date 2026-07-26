@@ -1,4 +1,5 @@
-﻿using BossHud.Bosses;
+﻿using BossHud.BossConfigs.Contexts;
+using BossHud.Bosses;
 using BossHud.EntityIdentifiers;
 using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Logging;
@@ -77,7 +78,6 @@ public abstract class BossConfig
 
         var boss = CreateBoss(new CreateBossContext
         {
-            Config = this,
             Plugin = plugin,
             MainEntity = mainEntity,
             TemplateId = templateId,
@@ -87,5 +87,5 @@ public abstract class BossConfig
         plugin.BossManager.Register(boss);
     }
 
-    protected abstract Boss CreateBoss(CreateBossContext context);
+    protected abstract IBoss CreateBoss(CreateBossContext context);
 }

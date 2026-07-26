@@ -1,9 +1,11 @@
 ﻿using BossHud.BossConfigs;
+using BossHud.BossConfigs.Contexts;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class BreakableBoss(CreateBossContext context) : Boss(context)
+public sealed class BreakableBoss(ICreateBossContextWithConfig<BreakableBossConfig> context)
+    : Boss<BreakableBossConfig>(context)
 {
     private readonly CBreakable _breakable = context.MainEntity.As<CBreakable>();
 

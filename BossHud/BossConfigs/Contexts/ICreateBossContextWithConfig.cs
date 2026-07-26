@@ -2,17 +2,17 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
-namespace BossHud.BossConfigs;
+namespace BossHud.BossConfigs.Contexts;
 
-public class CreateBossContext
+public interface ICreateBossContextWithConfig<out TConfig>
 {
-    public required BossConfig Config { get; init; }
+    public TConfig Config { get; }
 
-    public required BossHudPlugin Plugin { get; init; }
+    public BossHudPlugin Plugin { get; }
 
-    public required CEntityInstance MainEntity { get; init; }
+    public CEntityInstance MainEntity { get; }
 
-    public required string? TemplateId { get; init; }
+    public string? TemplateId { get; }
 
     public T GetEntity<T>(EntityIdentifier entityIdentifier) where T : NativeObject =>
         entityIdentifier.WithTemplateId(TemplateId).Find()?.As<T>()!; // TODO: What if not found?

@@ -1,4 +1,5 @@
-﻿using BossHud.Bosses;
+﻿using BossHud.BossConfigs.Contexts;
+using BossHud.Bosses;
 
 namespace BossHud.BossConfigs;
 
@@ -10,5 +11,5 @@ public sealed class BreakableBossConfig : BossConfig
         Output = "OnHealthChanged"
     };
 
-    protected override Boss CreateBoss(CreateBossContext context) => new BreakableBoss(context);
+    protected override IBoss CreateBoss(CreateBossContext context) => new BreakableBoss(context.WithConfig(this));
 }

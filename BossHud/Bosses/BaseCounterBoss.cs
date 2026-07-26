@@ -1,9 +1,12 @@
 ﻿using BossHud.BossConfigs;
+using BossHud.BossConfigs.Contexts;
 using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public abstract class BaseCounterBoss(CreateBossContext context) : Boss(context)
+public abstract class BaseCounterBoss<TBossConfig>(ICreateBossContextWithConfig<TBossConfig> context)
+    : Boss<TBossConfig>(context)
+    where TBossConfig : BaseCounterBossConfig
 {
     public sealed override BossType BossType => BossType.Hits;
 
