@@ -3,20 +3,36 @@ using CounterStrikeSharp.API.Core;
 
 namespace BossHud.EntityIdentifiers;
 
-// TODO: Find more?
-// TODO: Perf test and consider flatten?
-
-class TargetNameEntityIdentifier(string targetName) : EntityIdentifier
+public class EntityIdentifier
 {
-    public override CEntityInstance? Get() => Utilities.GetAllEntities()
-        .FirstOrDefault(e => e.Entity?.Name == targetName);
+    private enum Kind
+    {
+        TargetName,
+        HammerId,
+    }
 
-    public override bool Matches(CEntityInstance other) => other.Entity?.Name == targetName;
-}
+    private readonly Kind _kind;
+    private readonly string _targetName;
 
-public abstract class EntityIdentifier
-{
-    public abstract CEntityInstance? Get();
+    private EntityIdentifier(Kind kind, string targetName)
+    {
+        _kind = kind;
+        _targetName = targetName;
+    }
 
-    public abstract bool Matches(CEntityInstance other);
+    public static EntityIdentifier Parse(string identifier) => identifier.StartsWith('#')
+        ? new EntityIdentifier(Kind.HammerId, identifier[1..])
+        : new EntityIdentifier(Kind.TargetName, identifier);
+
+    public CEntityInstance? Get() => Utilities.GetAllEntities().FirstOrDefault(Matches);
+
+    public bool Matches(CEntityInstance other)
+    {
+        return _kind switch
+        {
+            Kind.TargetName => other.Entity?.Name == _targetName,
+            Kind.HammerId => other.As<CBaseEntity>().UniqueHammerID == _targetName,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
 }

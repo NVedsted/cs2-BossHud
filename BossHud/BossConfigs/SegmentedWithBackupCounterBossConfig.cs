@@ -21,9 +21,7 @@ public sealed class SegmentedWithBackupCounterBossConfig : BossConfig
     protected override Boss CreateBoss(BossHudPlugin plugin)
     {
         var counter = CounterIdentifier.Get()!.As<CMathCounter>(); // TODO: not found?
-
         var iterator = IteratorIdentifier.Get()!.As<CMathCounter>(); // TODO: not found?
-
         var backup = BackupIdentifier.Get()!.As<CMathCounter>(); // TODO: not found?
 
         return new SegmentedWithBackupCounterBoss(this, plugin, counter, iterator, backup);

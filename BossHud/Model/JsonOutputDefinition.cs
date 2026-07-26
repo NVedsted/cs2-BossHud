@@ -19,5 +19,5 @@ public record JsonOutputDefinition
     public required string Output { get; init; }
 
     public OutputDefinition Parse() => new()
-        { EntityIdentifier = Entity.AsTargetNameEntityIdentifier(), Output = Output };
+        { EntityIdentifier = EntityIdentifier.Parse(Entity), Output = Output };
 }

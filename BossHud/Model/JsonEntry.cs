@@ -186,36 +186,24 @@ public record JsonEntry
                 throw new InvalidOperationException("Breakable and backup cannot both be set");
             }
 
-            if (Breakable.StartsWith('#'))
-            {
-                throw new HammerIdNotSupportedException(
-                    "Hammer ID not supported in breakable");
-            }
-
-            return new BreakableBossConfig { BreakableIdentifier = Breakable.AsTargetNameEntityIdentifier() };
+            return new BreakableBossConfig { BreakableIdentifier = EntityIdentifier.Parse(Breakable) };
         }
 
         Debug.Assert(Counter is not null);
 
-        if (Counter.StartsWith('#'))
-        {
-            throw new HammerIdNotSupportedException(
-                "Hammer ID not supported in counter");
-        }
-
         return (Iterator, Backup) switch
         {
-            (null, null) => new SimpleCounterBossConfig { CounterIdentifier = Counter.AsTargetNameEntityIdentifier() },
+            (null, null) => new SimpleCounterBossConfig { CounterIdentifier = EntityIdentifier.Parse(Counter) },
             (not null, null) => new SegmentedCounterBossConfig
             {
-                CounterIdentifier = Counter.AsTargetNameEntityIdentifier(),
-                IteratorIdentifier = Iterator.AsTargetNameEntityIdentifier()
+                CounterIdentifier = EntityIdentifier.Parse(Counter),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator)
             },
             (not null, not null) => new SegmentedWithBackupCounterBossConfig
             {
-                CounterIdentifier = Counter.AsTargetNameEntityIdentifier(),
-                IteratorIdentifier = Iterator.AsTargetNameEntityIdentifier(),
-                BackupIdentifier = Backup.AsTargetNameEntityIdentifier(),
+                CounterIdentifier = EntityIdentifier.Parse(Counter),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator),
+                BackupIdentifier = EntityIdentifier.Parse(Backup),
             },
             (null, not null) => throw new InvalidOperationException(
                 "Backup cannot be set without iterator"), // TODO: name of boss
@@ -227,8 +215,6 @@ public record JsonEntry
 public class UnsupportedAttribute : Attribute;
 
 public abstract class EntryNotSupportedException(string message) : Exception(message);
-
-public class HammerIdNotSupportedException(string message) : EntryNotSupportedException(message);
 
 public class BreakableWithIteratorNotSupportedException(string message) : EntryNotSupportedException(message);
 
