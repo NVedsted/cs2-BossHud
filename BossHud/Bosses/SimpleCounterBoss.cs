@@ -12,7 +12,7 @@ public sealed class SimpleCounterBoss(
 {
     private void Update()
     {
-        CurrentHealth = (int)counter.GetValue();
+        CurrentHealth = (int)(counter.GetValue() - counter.Min);
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
 

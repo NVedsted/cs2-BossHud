@@ -34,7 +34,6 @@ public record Entry
     /// Targetname/Hammerid of hp iterator (segments)
     /// </summary>
     [JsonPropertyName("iterator")]
-    [Unsupported]
     public string? Iterator { get; init; }
 
     /// <summary>
@@ -160,6 +159,8 @@ public record Entry
 
         var config = ParseBaseConfig();
 
+        config.Name = Name;
+
         if (Trigger is not null) config.Trigger = Trigger;
 
         return config;
@@ -169,22 +170,23 @@ public record Entry
     {
         if (Breakable is not null && Counter is not null)
         {
-            throw new InvalidOperationException("Breakable and counter cannot both be set");
+            throw new InvalidOperationException("Breakable and counter cannot both be set"); // TODO: Catch
         }
 
         if (Breakable != null)
         {
+            if (Iterator is not null)
+            {
+                throw new BreakableWithIteratorNotSupportedException("Breakable with iterator is not supported");
+            }
+
             if (Breakable.StartsWith('#'))
             {
                 throw new HammerIdNotSupportedException(
                     "Hammer ID not supported in breakable");
             }
 
-            return new BreakableBossConfig
-            {
-                BreakableName = Breakable,
-                Name = Name,
-            };
+            return new BreakableBossConfig { BreakableName = Breakable };
         }
 
         Debug.Assert(Counter is not null);
@@ -195,11 +197,9 @@ public record Entry
                 "Hammer ID not supported in counter");
         }
 
-        return new SimpleCounterBossConfig
-        {
-            Name = Name,
-            CounterName = Counter,
-        };
+        return Iterator != null
+            ? new SegmentedCounterBossConfig { CounterName = Counter, IteratorName = Iterator }
+            : new SimpleCounterBossConfig { CounterName = Counter };
     }
 }
 
@@ -209,6 +209,8 @@ public class UnsupportedAttribute : Attribute;
 public abstract class EntryNotSupportedException(string message) : Exception(message);
 
 public class HammerIdNotSupportedException(string message) : EntryNotSupportedException(message);
+
+public class BreakableWithIteratorNotSupportedException(string message) : EntryNotSupportedException(message);
 
 public class EntryPropertiesNotSupported(string[] properties)
     : EntryNotSupportedException(

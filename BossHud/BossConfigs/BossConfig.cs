@@ -1,13 +1,12 @@
 ﻿using BossHud.Bosses;
 using BossHud.Model;
-using CounterStrikeSharp.API;
 using Microsoft.Extensions.Logging;
 
 namespace BossHud.BossConfigs;
 
 public abstract class BossConfig
 {
-    public string? Name { get; init; }
+    public string? Name { get; set; }
 
     public OutputDefinitionWithDelay Trigger
     {
