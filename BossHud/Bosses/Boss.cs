@@ -35,7 +35,8 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
         {
             if (Config.HitMarkerOnly) return false;
 
-            if (Config.MaxHp is not null && CurrentHealth > Config.MaxHp) return false; // TODO: update max-health once shown?
+            // TODO: update max-health once shown?
+            if (Config.MaxHp is not null && CurrentHealth > Config.MaxHp) return false;
 
             return true;
         }
@@ -47,7 +48,8 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     public virtual void Initialize()
     {
-        var killTriggerEntity = context.GetEntity<CEntityInstance>(Config.KillTrigger.EntityIdentifier); // TODO: optimize?
+        // TODO: optimize?
+        var killTriggerEntity = context.GetEntity<CEntityInstance>(Config.KillTrigger.EntityIdentifier);
         ListenerScope.HookSingleEntityOutput(killTriggerEntity, Config.KillTrigger.Output, OnKillTrigger);
 
         ListenerScope.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);

@@ -8,7 +8,7 @@ public sealed class SimpleCounterBossConfig : BaseCounterBossConfig
     protected override OutputDefinitionWithDelay DefaultKillTrigger => new()
     {
         EntityIdentifier = MainIdentifier.AsTemplated(Templated),
-        Output = "OnHitMin",
+        Output = ReverseCounter ? "OnHitMax" : "OnHitMin",
     };
 
     protected override IBoss CreateBoss(CreateBossContext context) => new SimpleCounterBoss(context.WithConfig(this));

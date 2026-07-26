@@ -12,7 +12,7 @@ public sealed class SegmentedWithBackupCounterBoss(
 {
     protected override void Update()
     {
-        var currentSegmentHealth = (int)(Counter.GetValue() - Counter.Min);
+        var currentSegmentHealth = GetCounterValue();
         var segmentHealth = (int)backup.GetValue();
         var segmentsLeft = GetCurrentSegmentsLeft();
 

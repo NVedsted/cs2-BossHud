@@ -20,7 +20,7 @@ public class SegmentedCounterBoss<TConfig>(
 
     protected override void Update()
     {
-        var currentSegmentHealth = (int)(Counter.GetValue() - Counter.Min);
+        var currentSegmentHealth = GetCounterValue();
         var currentSegmentsLeft = GetCurrentSegmentsLeft();
 
         if (currentSegmentsLeft != _segmentsLefts)

@@ -8,19 +8,23 @@ public abstract class BaseCounterBoss<TBossConfig>(ICreateBossContextWithConfig<
     : Boss<TBossConfig>(context)
     where TBossConfig : BaseCounterBossConfig
 {
-    public sealed override BossType BossType => BossType.Hits;
+    private readonly CMathCounter _counter = context.MainEntity.As<CMathCounter>();
 
-    protected readonly CMathCounter Counter = context.MainEntity.As<CMathCounter>();
+    public sealed override BossType BossType => BossType.Hits;
 
     public override void Initialize()
     {
-        ListenerScope.HookSingleEntityOutput(Counter, "OutValue", OnCounterOutValue);
+        ListenerScope.HookSingleEntityOutput(_counter, "OutValue", OnCounterOutValue);
         base.Initialize();
     }
 
+    protected int GetCounterValue() => Config.ReverseCounter
+        ? (int)(_counter.Max - _counter.GetValue())
+        : (int)(_counter.GetValue() - _counter.Min);
+
     protected override bool IsDeletedEntityBreaking(CEntityInstance entity)
     {
-        return entity == Counter;
+        return entity == _counter;
     }
 
     private HookResult OnCounterOutValue(

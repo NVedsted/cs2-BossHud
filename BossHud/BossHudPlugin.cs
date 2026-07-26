@@ -161,7 +161,8 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                     catch (BossConfigException exception)
                     {
                         _mapConfigState = exception.ConfigState;
-                        Logger.LogError(exception, "A boss config for {MapName} could not be loaded (Boss: {BossName}, State: {State})",
+                        Logger.LogError(exception,
+                            "A boss config for {MapName} could not be loaded (Boss: {BossName}, State: {State})",
                             mapName, exception.BossName, exception.ConfigState);
                         return null;
                     }

@@ -8,7 +8,7 @@ public sealed class SimpleCounterBoss(ICreateBossContextWithConfig<SimpleCounter
 {
     protected override void Update()
     {
-        CurrentHealth = (int)(Counter.GetValue() - Counter.Min);
+        CurrentHealth = GetCounterValue();
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
     }
 }

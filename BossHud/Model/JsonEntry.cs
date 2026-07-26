@@ -73,7 +73,6 @@ public record JsonEntry
     /// Whether counter should be reversed
     /// </summary>
     [JsonPropertyName("reversecounter")]
-    [Unsupported]
     public bool? ReverseCounter { get; init; }
 
     /// <summary>
@@ -199,7 +198,7 @@ public record JsonEntry
 
         Debug.Assert(Counter is not null);
 
-        BaseCounterBossConfig counterConfig =  (Iterator, Backup) switch
+        BaseCounterBossConfig counterConfig = (Iterator, Backup) switch
         {
             (null, null) => new SimpleCounterBossConfig
             {
@@ -218,6 +217,8 @@ public record JsonEntry
             },
             (null, not null) => throw new InvalidOperationException("Backup cannot be set without iterator"),
         };
+
+        if (ReverseCounter.HasValue) counterConfig.ReverseCounter = ReverseCounter.Value;
 
         if (counterConfig is SegmentedWithBackupCounterBossConfig config)
         {
