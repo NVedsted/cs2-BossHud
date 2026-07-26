@@ -29,7 +29,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         AllowTrailingCommas = true,
     };
 
-    // TODO: commands for reloading and flushing active bosses?
     private BossConfig[] _activeBossConfigs = [];
 
     public BossManager BossManager { get; }
