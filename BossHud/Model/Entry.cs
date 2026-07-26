@@ -112,7 +112,6 @@ public record Entry
     /// Whether top boss damage should be displayed after boss death
     /// </summary>
     [JsonPropertyName("showbeaten")]
-    [Unsupported]
     public bool? ShowBeaten { get; init; }
 
     /// <summary>
@@ -161,6 +160,8 @@ public record Entry
         config.Name = Name;
 
         if (Trigger is not null) config.Trigger = Trigger;
+
+        if (ShowBeaten is not null) config.ShowBeaten =  ShowBeaten.Value;
 
         return config;
     }

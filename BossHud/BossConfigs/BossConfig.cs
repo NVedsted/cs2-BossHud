@@ -16,6 +16,8 @@ public abstract class BossConfig
 
     protected abstract OutputDefinitionWithDelay DefaultTrigger { get; }
 
+    public bool ShowBeaten { get; set; } = true;
+
     public void SetupBoss(BossHudPlugin plugin)
     {
         // Mark immediately as seen to not spam timers.

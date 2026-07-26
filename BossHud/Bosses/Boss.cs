@@ -24,7 +24,7 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
 
     public bool Shown => true;
 
-    protected DamageTable DamageTable { get; } = new();
+    protected DamageTable? DamageTable { get; } = config.ShowBeaten ? new() : null;
 
     public abstract void Initialize();
 
@@ -49,8 +49,7 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
     protected void Defeated()
     {
         plugin.Logger.LogInformation("Boss {BossName} has been defeated", Config.Name);
-        // TODO: Enable once ready
-        // DamageTable.Print(BossType);
+        DamageTable?.Print(BossType, Config.Name);
         Dispose();
     }
 }

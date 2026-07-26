@@ -31,7 +31,7 @@ public abstract class BaseCounterBoss(
         if (damage <= 0) return;
 
         // TODO: maybe move somewhere else
-        DamageTable.AddDamage(player, damage);
+        DamageTable?.AddDamage(player, damage);
         OnHit(player);
     }
 
