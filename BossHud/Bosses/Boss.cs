@@ -24,7 +24,7 @@ public abstract class Boss(CreateBossContext context) : IDisposable
 
     public int MaxHealth { get; protected set; }
 
-    public bool Shown => true;
+    public bool Shown { get;  } = !context.Config.HitMarkerOnly;
 
     public CEntityInstance MainEntity { get; } = context.MainEntity;
 

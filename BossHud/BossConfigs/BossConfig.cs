@@ -25,6 +25,8 @@ public abstract class BossConfig
 
     public bool Templated { get; set; } = false;
 
+    public bool HitMarkerOnly { get; set; } = false;
+
     public void SetupBoss(BossHudPlugin plugin, CEntityInstance caller)
     {
         // Mark immediately as seen to not spam timers.

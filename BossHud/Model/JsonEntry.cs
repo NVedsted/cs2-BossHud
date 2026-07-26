@@ -85,8 +85,7 @@ public record JsonEntry
     public bool? ReverseIterator { get; init; }
 
     [JsonPropertyName("hitmarkeronly")]
-    [Unsupported]
-    public bool? HitmarkerOnly { get; init; }
+    public bool? HitmarkerOnly { get; init; } // TODO: remember to validate ShowTrigger
 
     /// <summary>
     /// Whether boss should be displayed as no-bar hud variant
@@ -161,10 +160,9 @@ public record JsonEntry
             config.Name = Name;
 
             if (MultiTrigger.HasValue) config.MultiTrigger = MultiTrigger.Value;
-
             if (Templated.HasValue) config.Templated = Templated.Value;
-
             if (ShowBeaten.HasValue) config.ShowBeaten = ShowBeaten.Value;
+            if (HitmarkerOnly.HasValue) config.HitMarkerOnly = HitmarkerOnly.Value;
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
 
