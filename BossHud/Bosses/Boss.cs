@@ -43,6 +43,7 @@ public abstract class Boss(BossConfig config, BossHudPlugin plugin) : IDisposabl
         plugin.BossManager.Unregister(this);
         GC.SuppressFinalize(this);
         _disposed = true;
+        plugin.Logger.LogInformation("Boss {BossName} was removed", Config.Name);
     }
 
     protected void Defeated()
