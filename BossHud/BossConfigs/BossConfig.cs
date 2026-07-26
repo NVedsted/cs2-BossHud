@@ -28,6 +28,8 @@ public abstract class BossConfig
 
     public bool HitMarkerOnly { get; set; } = false;
 
+    public int? MaxHp { get; set; }
+
     public void SetupBoss(BossHudPlugin plugin, CEntityInstance caller)
     {
         // Mark immediately as seen to not spam timers.

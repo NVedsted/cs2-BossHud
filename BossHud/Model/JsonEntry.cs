@@ -136,7 +136,6 @@ public record JsonEntry
     /// If the boss has more than this HP, it will not start showing on the HUD (0.0 = no limit)
     /// </summary>
     [JsonPropertyName("maxhp")]
-    [Unsupported]
     public float? MaxHp { get; init; }
 
     public BossConfig Parse()
@@ -162,6 +161,7 @@ public record JsonEntry
             if (Templated.HasValue) config.Templated = Templated.Value;
             if (ShowBeaten.HasValue) config.ShowBeaten = ShowBeaten.Value;
             if (HitmarkerOnly.HasValue) config.HitMarkerOnly = HitmarkerOnly.Value;
+            if (MaxHp > 0.0) config.MaxHp = (int)MaxHp.Value;
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
 

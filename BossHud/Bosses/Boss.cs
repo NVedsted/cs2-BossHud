@@ -28,7 +28,18 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     public int MaxHealth { get; protected set; }
 
-    public bool Shown { get; } = !context.Config.HitMarkerOnly;
+    // TODO: Pre-compute
+    public bool Shown
+    {
+        get
+        {
+            if (Config.HitMarkerOnly) return false;
+
+            if (Config.MaxHp is not null && CurrentHealth > Config.MaxHp) return false; // TODO: update max-health once shown?
+
+            return true;
+        }
+    }
 
     public CEntityInstance MainEntity { get; } = context.MainEntity;
 
