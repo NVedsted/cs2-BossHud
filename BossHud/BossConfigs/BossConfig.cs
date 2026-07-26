@@ -60,6 +60,7 @@ public abstract class BossConfig
     {
         var mainEntity = MainIdentifier.WithTemplateId(templateId).Find()!; // TODO: not found?
 
+        // Ignore if entity is already part of a boss.
         if (plugin.BossManager.IsBossEntity(mainEntity)) return;
 
         if (templateId is null)

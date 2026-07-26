@@ -99,19 +99,19 @@ public record JsonEntry
     /// Whether boss can be triggered multiple times (multiple instances)
     /// </summary>
     [JsonPropertyName("multitrigger")]
-    public bool MultiTrigger { get; init; } = false;
+    public bool? MultiTrigger { get; init; }
 
     /// <summary>
     /// Whether boss is templated and has name fixup
     /// </summary>
     [JsonPropertyName("templated")]
-    public bool Templated { get; init; } = false;
+    public bool? Templated { get; init; }
 
     /// <summary>
     /// Whether top boss damage should be displayed after boss death
     /// </summary>
     [JsonPropertyName("showbeaten")]
-    public bool ShowBeaten { get; init; } = true;
+    public bool? ShowBeaten { get; init; }
 
     /// <summary>
     /// Specify time before boss health is hidden after taking no damage
@@ -159,11 +159,14 @@ public record JsonEntry
             var config = ParseBaseConfig();
 
             config.Name = Name;
-            config.Templated = Templated;
-            config.ShowBeaten = ShowBeaten;
-            config.MultiTrigger = MultiTrigger;
 
-            if (Trigger is not null) config.Trigger = Trigger.Parse(Templated);
+            if (MultiTrigger.HasValue) config.MultiTrigger = MultiTrigger.Value;
+
+            if (Templated.HasValue) config.Templated = Templated.Value;
+
+            if (ShowBeaten.HasValue) config.ShowBeaten = ShowBeaten.Value;
+
+            if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
 
             return config;
         }
@@ -175,6 +178,8 @@ public record JsonEntry
 
     private BossConfig ParseBaseConfig()
     {
+        var templated = Templated ?? false;
+
         if (Breakable is not null && Counter is not null)
         {
             throw new InvalidOperationException("Breakable and counter cannot both be set");
@@ -192,7 +197,7 @@ public record JsonEntry
                 throw new InvalidOperationException("Breakable and backup cannot both be set");
             }
 
-            return new BreakableBossConfig { MainIdentifier = EntityIdentifier.Parse(Breakable).Validate(Templated) };
+            return new BreakableBossConfig { MainIdentifier = EntityIdentifier.Parse(Breakable).Validate(templated) };
         }
 
         Debug.Assert(Counter is not null);
@@ -201,18 +206,18 @@ public record JsonEntry
         {
             (null, null) => new SimpleCounterBossConfig
             {
-                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(Templated),
+                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(templated),
             },
             (not null, null) => new SegmentedCounterBossConfig
             {
-                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(Templated),
-                IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(Templated),
+                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(templated),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(templated),
             },
             (not null, not null) => new SegmentedWithBackupCounterBossConfig
             {
-                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(Templated),
-                IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(Templated),
-                BackupIdentifier = EntityIdentifier.Parse(Backup).Validate(Templated),
+                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(templated),
+                IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(templated),
+                BackupIdentifier = EntityIdentifier.Parse(Backup).Validate(templated),
             },
             (null, not null) => throw new InvalidOperationException("Backup cannot be set without iterator"),
         };
