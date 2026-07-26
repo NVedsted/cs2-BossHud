@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <!--<DefineConstants>HITMARKER</DefineConstants>-->
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,8 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="HitMarkApi" Condition="$(DefineConstants.Contains('HITMARKER'))">
-            <HintPath>D:\Servers\Steam\cs2\game\csgo\addons\counterstrikesharp\shared\HitMarkApi\HitMarkApi.dll</HintPath>
+        <Reference Include="cs2-HitMarkApi" Condition="$(DefineConstants.Contains('HITMARKER'))">
+            <HintPath>D:\Servers\Steam\cs2\game\csgo\addons\counterstrikesharp\shared\cs2-HitMarkApi\cs2-HitMarkApi.dll</HintPath>
         </Reference>
     </ItemGroup>
 

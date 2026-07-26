@@ -2,7 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Logging;
 #if HITMARKER
-using HitMarkApi;
+using CS2_HitMarkApi;
 #endif
 
 namespace BossHud.Bosses;
