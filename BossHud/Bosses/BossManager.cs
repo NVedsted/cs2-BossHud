@@ -20,8 +20,6 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     private bool _started;
     private bool _disposed;
 
-    // TODO: Should a boss be triggerable again on the same round if multi-trigger is off?
-
     public string? BossMessage { get; private set; }
 
     public void Register(IBoss boss)

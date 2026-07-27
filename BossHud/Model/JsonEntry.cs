@@ -80,8 +80,7 @@ public record JsonEntry
     [JsonPropertyName("reverseiterator")]
     public bool? ReverseIterator { get; init; }
 
-    [JsonPropertyName("hitmarkeronly")]
-    public bool? HitmarkerOnly { get; init; } // TODO: remember to validate ShowTrigger
+    [JsonPropertyName("hitmarkeronly")] public bool? HitmarkerOnly { get; init; }
 
     /// <summary>
     /// Whether boss should be displayed as no-bar hud variant
@@ -144,6 +143,11 @@ public record JsonEntry
             if (unsupportedPropsSet.Length != 0)
             {
                 throw new EntryPropertiesNotSupported(unsupportedPropsSet);
+            }
+
+            if (HitmarkerOnly == true && ShowTrigger is not null)
+            {
+                throw new InvalidOperationException("hitmarkeronly & showtrigger cannot be set at the same time");
             }
 
             var config = ParseBaseConfig();
