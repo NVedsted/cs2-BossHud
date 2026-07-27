@@ -182,14 +182,20 @@ public record JsonEntry
 
         if (Breakable != null)
         {
+            var breakableIdentifier = EntityIdentifier.Parse(Breakable).Validate(templated);
+
             if (Iterator is not null)
             {
-                throw new BreakableWithIteratorNotSupportedException("Breakable with iterator is not supported");
-            }
+                var config = new BreakableWithIteratorBossConfig
+                {
+                    MainIdentifier = breakableIdentifier,
+                    IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(templated)
+                };
 
-            if (Backup is not null)
-            {
-                throw new InvalidOperationException("Breakable and backup cannot both be set");
+                if (IteratorOffset.HasValue) config.IteratorOffset = (int)IteratorOffset.Value;
+                if (ReverseIterator.HasValue) config.ReverseIterator = ReverseIterator.Value;
+
+                return config;
             }
 
             return new BreakableBossConfig { MainIdentifier = EntityIdentifier.Parse(Breakable).Validate(templated) };
@@ -197,20 +203,19 @@ public record JsonEntry
 
         Debug.Assert(Counter is not null);
 
+        var counterIdentifier = EntityIdentifier.Parse(Counter).Validate(templated);
+
         BaseCounterBossConfig counterConfig = (Iterator, Backup) switch
         {
-            (null, null) => new SimpleCounterBossConfig
-            {
-                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(templated),
-            },
+            (null, null) => new SimpleCounterBossConfig { MainIdentifier = counterIdentifier },
             (not null, null) => new SegmentedCounterBossConfig
             {
-                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(templated),
+                MainIdentifier = counterIdentifier,
                 IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(templated),
             },
             (not null, not null) => new SegmentedWithBackupCounterBossConfig
             {
-                MainIdentifier = EntityIdentifier.Parse(Counter).Validate(templated),
+                MainIdentifier = counterIdentifier,
                 IteratorIdentifier = EntityIdentifier.Parse(Iterator).Validate(templated),
                 BackupIdentifier = EntityIdentifier.Parse(Backup).Validate(templated),
             },

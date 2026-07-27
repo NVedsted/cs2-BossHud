@@ -28,6 +28,10 @@ public class SegmentedCounterBoss<TConfig>(
             _segmentsLefts = currentSegmentsLeft;
             _segmentHealth = currentSegmentHealth;
         }
+        else if (currentSegmentHealth > _segmentHealth)
+        {
+            _segmentHealth = currentSegmentHealth;
+        }
 
         CurrentHealth = _segmentHealth * _segmentsLefts + currentSegmentHealth;
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);

@@ -4,8 +4,8 @@ using CounterStrikeSharp.API.Core;
 
 namespace BossHud.Bosses;
 
-public sealed class BreakableBoss(ICreateBossContextWithConfig<BreakableBossConfig> context)
-    : Boss<BreakableBossConfig>(context)
+public class BreakableBoss<TConfig>(ICreateBossContextWithConfig<TConfig> context)
+    : Boss<TConfig>(context) where TConfig : BreakableBossConfig
 {
     private readonly CBreakable _breakable = context.MainEntity.As<CBreakable>();
 
@@ -33,7 +33,12 @@ public sealed class BreakableBoss(ICreateBossContextWithConfig<BreakableBossConf
 
     protected override void Update()
     {
-        CurrentHealth = _breakable.Health + Config.Offset;
+        CurrentHealth = GetCurrentHealth();
         MaxHealth = Math.Max(CurrentHealth, MaxHealth);
+    }
+
+    protected int GetCurrentHealth()
+    {
+        return _breakable.Health + Config.Offset;
     }
 }

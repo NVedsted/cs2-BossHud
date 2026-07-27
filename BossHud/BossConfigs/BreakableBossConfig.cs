@@ -3,7 +3,7 @@ using BossHud.Bosses;
 
 namespace BossHud.BossConfigs;
 
-public sealed class BreakableBossConfig : BossConfig
+public class BreakableBossConfig : BossConfig
 {
     protected override OutputDefinitionWithDelay DefaultTrigger => new()
     {
@@ -17,5 +17,6 @@ public sealed class BreakableBossConfig : BossConfig
         Output = "OnBreak"
     };
 
-    protected override IBoss CreateBoss(CreateBossContext context) => new BreakableBoss(context.WithConfig(this));
+    protected override IBoss CreateBoss(CreateBossContext context) =>
+        new BreakableBoss<BreakableBossConfig>(context.WithConfig(this));
 }
