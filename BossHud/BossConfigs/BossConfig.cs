@@ -46,6 +46,8 @@ public abstract class BossConfig
 
     public int Offset { get; set; }
 
+    public bool MinorHud { get; set; } = false;
+
     public void SetupBoss(BossHudPlugin plugin, CEntityInstance caller)
     {
         // Mark immediately as seen to not spam timers.

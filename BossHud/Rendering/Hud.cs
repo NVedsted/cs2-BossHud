@@ -5,7 +5,7 @@ namespace BossHud.Rendering;
 // TODO: Show HITS VS HP
 public static class Hud
 {
-    public record BossData(string? Name, int CurrentHealth, int MaxHealth);
+    public record BossData(string? Name, int CurrentHealth, int MaxHealth, bool MinorHud);
 
     public static string? BuildHud(IEnumerable<BossData> bosses)
     {
@@ -22,7 +22,8 @@ public static class Hud
         if (!enumerator.MoveNext())
         {
             // Only one boss is present.
-            // TODO: minorhud option
+            if (first.MinorHud) return BuildMultiShow([first]);
+
             return BuildMajorHud(first);
         }
 

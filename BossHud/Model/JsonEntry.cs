@@ -87,7 +87,6 @@ public record JsonEntry
     /// Whether boss should be displayed as no-bar hud variant
     /// </summary>
     [JsonPropertyName("minorhud")]
-    [Unsupported]
     public bool? MinorHud { get; init; }
 
     /// <summary>
@@ -158,6 +157,7 @@ public record JsonEntry
             if (MaxHp > 0.0) config.MaxHp = (int)MaxHp.Value;
             if (Timeout > 0.0) config.Timeout = Timeout.Value;
             if (Offset.HasValue) config.Offset = (int)Offset.Value;
+            if (MinorHud.HasValue) config.MinorHud = MinorHud.Value;
 
             if (Trigger is not null) config.Trigger = Trigger.Parse(Templated ?? false);
             if (KillTrigger is not null) config.KillTrigger = KillTrigger.Parse(false);
@@ -244,8 +244,6 @@ public record JsonEntry
 public sealed class UnsupportedAttribute : Attribute;
 
 public abstract class EntryNotSupportedException(string message) : InvalidOperationException(message);
-
-public sealed class BreakableWithIteratorNotSupportedException(string message) : EntryNotSupportedException(message);
 
 public sealed class EntryPropertiesNotSupported(string[] properties)
     : EntryNotSupportedException(
