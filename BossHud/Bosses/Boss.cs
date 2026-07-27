@@ -1,5 +1,6 @@
 ﻿using BossHud.BossConfigs;
 using BossHud.BossConfigs.Contexts;
+using BossHud.Rendering;
 using BossHud.Utility;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;

@@ -4,7 +4,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 
-namespace BossHud;
+namespace BossHud.Rendering;
 
 public sealed class DamageTable : IDisposable
 {

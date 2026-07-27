@@ -1,4 +1,6 @@
-﻿namespace BossHud.Tests;
+﻿using BossHud.Rendering;
+
+namespace BossHud.Tests.Rendering;
 
 public class GradientTests
 {

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using BossHud.Bosses;
 
-namespace BossHud;
+namespace BossHud.Rendering;
 
 public static class TopDamageTable
 {

@@ -1,7 +1,8 @@
 ﻿using BossHud.Bosses;
+using BossHud.Rendering;
 using TUnit.Assertions.Enums;
 
-namespace BossHud.Tests;
+namespace BossHud.Tests.Rendering;
 
 public class TopDamageTableTests
 {

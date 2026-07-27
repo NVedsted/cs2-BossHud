@@ -1,4 +1,4 @@
-﻿namespace BossHud;
+﻿namespace BossHud.Rendering;
 
 public static class Gradient
 {
