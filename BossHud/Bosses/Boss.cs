@@ -44,7 +44,6 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
     /// </summary>
     private bool _waitingForShowTrigger;
 
-    // TODO: Pre-compute
     public bool Shown
     {
         get
@@ -74,7 +73,6 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
     {
         _lastDamaged = TimeProvider.System.GetTimestamp();
 
-        // TODO: optimize?
         var killTriggerEntity = context.GetEntity<CEntityInstance>(Config.KillTrigger.EntityIdentifier);
         ListenerScope.HookSingleEntityOutput(killTriggerEntity, Config.KillTrigger.Output, OnKillTrigger);
 

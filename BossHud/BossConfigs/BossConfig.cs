@@ -10,6 +10,8 @@ public abstract class BossConfig
 {
     public string? Name { get; set; }
 
+    public int Order { get; set; }
+
     public OutputDefinitionWithDelay Trigger
     {
         get => field ??= DefaultTrigger;

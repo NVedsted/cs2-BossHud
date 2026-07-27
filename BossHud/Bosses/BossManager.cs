@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections.Immutable;
 using BossHud.BossConfigs;
 using BossHud.Rendering;
 using CounterStrikeSharp.API.Core;
@@ -8,15 +8,19 @@ namespace BossHud.Bosses;
 
 public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 {
-    private readonly ConcurrentDictionary<IBoss, byte> _activeBosses = new();
-    private readonly ConcurrentDictionary<CEntityInstance, byte> _bossEntities = new();
+    /// <summary>
+    /// Read from another thread so much support thread-safe reading
+    /// </summary>
+    private ImmutableSortedSet<IBoss> _activeBosses = ImmutableSortedSet.Create<IBoss>(BossOrderComparer.Instance);
+
+    private readonly HashSet<CEntityInstance> _bossEntities = new();
     private readonly HashSet<BossConfig> _bossesSeenThisRound = new();
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private TaskCompletionSource? _waker;
     private bool _started;
     private bool _disposed;
 
-    private IEnumerable<IBoss> ActiveBosses => _activeBosses.Keys;
+    private IEnumerable<IBoss> ActiveBosses => _activeBosses;
 
     // TODO: Should a boss be triggerable again on the same round if multi-trigger is off?
 
@@ -24,15 +28,15 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 
     public void Register(IBoss boss)
     {
-        _activeBosses.TryAdd(boss, 0);
-        _bossEntities.TryAdd(boss.MainEntity, 0);
+        _activeBosses = _activeBosses.Add(boss);
+        _bossEntities.Add(boss.MainEntity);
         WakeIfNeeded();
     }
 
     public void Unregister(IBoss boss)
     {
-        _bossEntities.TryRemove(boss.MainEntity, out _);
-        _activeBosses.TryRemove(boss, out _);
+        _bossEntities.Remove(boss.MainEntity);
+        _activeBosses = _activeBosses.Remove(boss);
     }
 
     /// <summary>
@@ -42,11 +46,11 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     /// <returns>Whether this is the first time</returns>
     public bool TryMarkBossConfigAsTriggered(BossConfig config) => _bossesSeenThisRound.Add(config);
 
-    public bool IsBossEntity(CEntityInstance instance) => _bossEntities.ContainsKey(instance);
+    public bool IsBossEntity(CEntityInstance instance) => _bossEntities.Contains(instance);
 
     public void CleanupRound()
     {
-        foreach (var activeBoss in ActiveBosses)
+        foreach (var activeBoss in _activeBosses)
         {
             activeBoss.Dispose();
         }
@@ -68,7 +72,7 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
             plugin.Logger.LogInformation("Starting background worker");
             while (!token.IsCancellationRequested)
             {
-                if (_activeBosses.IsEmpty)
+                if (_activeBosses.Count == 0)
                 {
                     BossMessage = null;
                     _waker = new TaskCompletionSource();
@@ -89,12 +93,11 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     private void WakeIfNeeded()
     {
         EnsureMessageUpdaterStarted();
-        if (!_activeBosses.IsEmpty) _waker?.TrySetResult();
+        if (_activeBosses.Count != 0) _waker?.TrySetResult();
     }
 
     private void UpdateMessage()
     {
-        // TODO: Sort by config order?
         var activeBoss = ActiveBosses
             .FirstOrDefault(b => b.Shown); // TODO: Pick more intelligently or multi-show
 

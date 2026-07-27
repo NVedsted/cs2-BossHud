@@ -152,11 +152,13 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                 return;
             }
 
-            _activeBossConfigs = entries.Select(c =>
+            _activeBossConfigs = entries.Select((c, i) =>
                 {
                     try
                     {
-                        return c.Parse();
+                        var config = c.Parse();
+                        config.Order = i;
+                        return config;
                     }
                     catch (BossConfigException exception)
                     {
