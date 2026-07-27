@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BossHud.Tests/BossHud.Tests.csproj" />
+  <Project Path="BossHud/BossHud.csproj" />
+</Solution>
