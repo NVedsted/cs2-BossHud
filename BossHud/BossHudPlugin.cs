@@ -37,7 +37,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private readonly CCSPlayerController?[] _activePlayers = new CCSPlayerController?[64];
 
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
     private ConfigState _mapConfigState = ConfigState.Valid;
 
     public BossHudPlugin()
@@ -115,11 +114,6 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         CleanupRound();
 
         return HookResult.Continue;
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _cancellationTokenSource.Cancel();
     }
 
     private void OnMapStart(string mapName)
