@@ -1,11 +1,11 @@
 ﻿using System.Text;
+using BossHud.Bosses;
 
 namespace BossHud.Rendering;
 
-// TODO: Show HITS VS HP
 public static class Hud
 {
-    public record BossData(string? Name, int CurrentHealth, int MaxHealth, bool MinorHud);
+    public record BossData(string? Name, int CurrentHealth, int MaxHealth, bool MinorHud, BossType Type);
 
     public static string? BuildHud(IEnumerable<BossData> bosses)
     {
@@ -61,9 +61,8 @@ public static class Hud
             }
 
             var hpPercentage = bossData.CurrentHealth / (double)bossData.MaxHealth;
-            var color = Gradient.GetHpColor(hpPercentage);
-            builder.Append(
-                $"<font class=\"fontSize-l\" color=\"{color}\">{bossData.CurrentHealth}</font> ({hpPercentage * 100.0:N0}%)");
+            builder.AppendHealth(bossData, hpPercentage, false);
+            builder.Append($" ({hpPercentage * 100.0:N0}%)");
         }
 
         return builder.ToString();
@@ -82,8 +81,8 @@ public static class Hud
         }
 
         var color = Gradient.GetHpColor(hpPercentage);
-        builder.Append(
-            $"<font class=\"fontSize-l\" color=\"{color}\">{bossData.CurrentHealth}</font> ({hpPercentage * 100.0:N0}%)<br><font color=\"{color}\">");
+        builder.AppendHealth(bossData, hpPercentage, true);
+        builder.Append($"<br><font color=\"{color}\">");
 
         for (var i = 0; i < displaySegments; i++)
         {
@@ -100,5 +99,19 @@ public static class Hud
         builder.Append("</font>");
 
         return builder.ToString();
+    }
+
+    private static void AppendHealth(this StringBuilder builder, BossData bossData, double hpPercentage, bool major)
+    {
+        var color = Gradient.GetHpColor(hpPercentage);
+        var unit = (bossData.Type, bossData.CurrentHealth) switch
+        {
+            (BossType.Hp, _) => "DMG",
+            (BossType.Hits, 1) => "HIT",
+            (BossType.Hits, _) => "HITS",
+            _ => throw new InvalidOperationException()
+        };
+        builder.Append(
+            $"<font {(major ? "class=\"fontSize-l\" " : "")}color=\"{color}\">{bossData.CurrentHealth} {unit}</font>");
     }
 }

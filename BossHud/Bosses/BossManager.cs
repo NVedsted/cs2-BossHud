@@ -102,7 +102,8 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
                 b.Config.Name,
                 b.CurrentHealth,
                 b.MaxHealth,
-                b.Config.MinorHud)));
+                b.Config.MinorHud,
+                b.BossType)));
     }
 
     public void Dispose()

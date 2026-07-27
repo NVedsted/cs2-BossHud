@@ -7,6 +7,8 @@ public interface IBoss : IDisposable
 {
     BossConfig Config { get; }
 
+    BossType BossType { get; }
+
     int CurrentHealth { get; }
 
     int MaxHealth { get; }

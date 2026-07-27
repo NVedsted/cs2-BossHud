@@ -1,4 +1,5 @@
-﻿using BossHud.Rendering;
+﻿using BossHud.Bosses;
+using BossHud.Rendering;
 
 namespace BossHud.Tests.Rendering;
 
@@ -17,45 +18,57 @@ public class HudTests
     [Test]
     public async Task SingleMajor()
     {
-        Hud.BossData[] bosses = [new("Scary Boss", 30, 100, false)];
+        Hud.BossData[] bosses = [new("Scary Boss", 30, 100, false, BossType.Hp)];
 
         var hud = Hud.BuildHud(bosses);
 
         await Assert.That(hud)
             .IsEqualTo(
-                """Scary Boss<br><font class="fontSize-l" color="#FF9900">30</font> (30%)<br><font color="#FF9900">██████</font><font color="gray">██████████████</font>""");
+                """Scary Boss<br><font class="fontSize-l" color="#FF9900">30 DMG</font><br><font color="#FF9900">██████</font><font color="gray">██████████████</font>""");
+    }
+
+    [Test]
+    public async Task SingleHit()
+    {
+        Hud.BossData[] bosses = [new("Weak Boss", 1, 30, false, BossType.Hits)];
+
+        var hud = Hud.BuildHud(bosses);
+
+        await Assert.That(hud)
+            .IsEqualTo(
+                """Weak Boss<br><font class="fontSize-l" color="#FF1100">1 HIT</font><br><font color="#FF1100">█</font><font color="gray">███████████████████</font>""");
     }
 
     [Test]
     public async Task SingleMajorNoName()
     {
-        Hud.BossData[] bosses = [new(null, 30, 100, false)];
+        Hud.BossData[] bosses = [new(null, 30, 100, false, BossType.Hp)];
 
         var hud = Hud.BuildHud(bosses);
 
         await Assert.That(hud)
             .IsEqualTo(
-                """<font class="fontSize-l" color="#FF9900">30</font> (30%)<br><font color="#FF9900">██████</font><font color="gray">██████████████</font>""");
+                """<font class="fontSize-l" color="#FF9900">30 DMG</font><br><font color="#FF9900">██████</font><font color="gray">██████████████</font>""");
     }
 
     [Test]
     public async Task SingleMinor()
     {
-        Hud.BossData[] bosses = [new("Scary Boss", 30, 100, true)];
+        Hud.BossData[] bosses = [new("Scary Boss", 30, 100, true, BossType.Hp)];
 
         var hud = Hud.BuildHud(bosses);
 
-        await Assert.That(hud).IsEqualTo("""Scary Boss: <font class="fontSize-l" color="#FF9900">30</font> (30%)""");
+        await Assert.That(hud).IsEqualTo("""Scary Boss: <font color="#FF9900">30 DMG</font> (30%)""");
     }
 
     [Test]
     public async Task SingleMinorNoName()
     {
-        Hud.BossData[] bosses = [new(null, 30, 100, true)];
+        Hud.BossData[] bosses = [new(null, 30, 100, true, BossType.Hp)];
 
         var hud = Hud.BuildHud(bosses);
 
-        await Assert.That(hud).IsEqualTo("""<font class="fontSize-l" color="#FF9900">30</font> (30%)""");
+        await Assert.That(hud).IsEqualTo("""<font color="#FF9900">30 DMG</font> (30%)""");
     }
 
     [Test]
@@ -63,15 +76,15 @@ public class HudTests
     {
         Hud.BossData[] bosses =
         [
-            new("Higher Boss", 950, 1000, false),
-            new("Scary Boss", 30, 100, false),
+            new("Higher Boss", 950, 1000, false, BossType.Hp),
+            new("Scary Boss", 30, 100, false, BossType.Hits),
         ];
 
         var hud = Hud.BuildHud(bosses);
 
         await Assert.That(hud)
             .IsEqualTo(
-                """Higher Boss: <font class="fontSize-l" color="#1AFF00">950</font> (95%)<br>Scary Boss: <font class="fontSize-l" color="#FF9900">30</font> (30%)""");
+                """Higher Boss: <font color="#1AFF00">950 DMG</font> (95%)<br>Scary Boss: <font color="#FF9900">30 HITS</font> (30%)""");
     }
 
     [Test]
@@ -79,14 +92,14 @@ public class HudTests
     {
         Hud.BossData[] bosses =
         [
-            new("Higher Boss", 950, 1000, false),
-            new(null, 30, 100, false),
+            new("Higher Boss", 950, 1000, false, BossType.Hits),
+            new(null, 30, 100, false, BossType.Hp),
         ];
 
         var hud = Hud.BuildHud(bosses);
 
         await Assert.That(hud)
             .IsEqualTo(
-                """Higher Boss: <font class="fontSize-l" color="#1AFF00">950</font> (95%)<br><font class="fontSize-l" color="#FF9900">30</font> (30%)""");
+                """Higher Boss: <font color="#1AFF00">950 HITS</font> (95%)<br><font color="#FF9900">30 DMG</font> (30%)""");
     }
 }
