@@ -1,9 +1,0 @@
-[
-    {
-        "name":             "Dragon",
-        "counter":          "dragon_hp"
-    },
-    {
-        "counter":          "boss_hp"
-    }
-]

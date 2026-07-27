@@ -14,7 +14,8 @@ public class BasicTests
 
         var unsupportedStats = new Dictionary<string, long>();
 
-        foreach (var fileName in Directory.EnumerateFiles("../../../../configs"))
+        foreach (var fileName in Directory.EnumerateFiles("../../../../gfl-configs/bosshud")
+                     .Where(fileName => !fileName.EndsWith("template.jsonc")))
         {
             await using var stream = File.OpenRead(fileName);
             var entries = await JsonSerializer.DeserializeAsync<JsonEntry[]>(stream, new JsonSerializerOptions
@@ -62,6 +63,6 @@ public class BasicTests
             Console.WriteLine($"\t{keyValuePair.Key}: {keyValuePair.Value}");
         }
 
-        await Assert.That(success).IsEqualTo(743);
+        await Assert.That(success).IsEqualTo(848);
     }
 }

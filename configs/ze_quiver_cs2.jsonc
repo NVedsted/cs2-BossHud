@@ -1,7 +1,0 @@
-[
-    {
-        "name":             "Ultralisk",
-        "counter":          "ultralisk_knockback_counter",
-        "iterator":         "ultralisk_hp_counter"
-    }
-]

@@ -1,8 +1,0 @@
-[
-    {
-        "name":             "Eye",
-        "counter":          "BossCounter1",
-        "backup":           "BossCounter2",
-        "iterator":         "BossCounter3"
-    }
-]

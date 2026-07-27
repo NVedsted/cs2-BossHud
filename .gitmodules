@@ -1,0 +1,3 @@
+[submodule "gfl-configs"]
+	path = gfl-configs
+	url = https://github.com/gflze/CS2-ZE-Configs.git

@@ -1,8 +1,0 @@
-[
-    {
-        "name":             "Scorched Demon",
-        "counter":          "naraka_counter",
-        "backup":           "naraka_hp_backup",
-        "iterator":         "naraka_hp_iterations"
-    }
-]
