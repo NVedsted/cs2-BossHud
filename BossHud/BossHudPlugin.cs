@@ -11,6 +11,10 @@ using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
+#if HITMARKER
+using CS2_HitMarkApi;
+#endif
+
 namespace BossHud;
 
 [MinimumApiVersion(370)]
@@ -39,6 +43,10 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 
     private ConfigState _mapConfigState = ConfigState.Valid;
 
+#if HITMARKER
+    public IHitMarkApi? HitMarkApi { get; private set; }
+#endif
+
     public BossHudPlugin()
     {
         BossManager = new(this);
@@ -64,6 +72,29 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
                 _activePlayers[player.Slot] = player;
             }
         }
+    }
+
+    public override void OnAllPluginsLoaded(bool hotReload)
+    {
+#if HITMARKER
+        try
+        {
+            HitMarkApi = IHitMarkApi.Capability.Get();
+
+            if (HitMarkApi is not null)
+            {
+                Logger.LogInformation("HitMarkApi found & loaded");
+            }
+            else
+            {
+                Logger.LogWarning("Failed to load HitMarkApi; hitmarkers will be disabled");
+            }
+        }
+        catch (KeyNotFoundException e)
+        {
+            Logger.LogWarning(e, "Failed to load HitMarkApi; hitmarkers will be disabled");
+        }
+#endif
     }
 
     private HookResult OnEntityOutput(

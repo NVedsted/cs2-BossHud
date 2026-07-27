@@ -5,9 +5,6 @@ using BossHud.Utility;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Logging;
-#if HITMARKER
-using CS2_HitMarkApi;
-#endif
 
 namespace BossHud.Bosses;
 
@@ -109,8 +106,9 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
             _timedOut = false;
             _plugin.Logger.LogInformation("Boss {BossName} is no longer timed out", Config.InternalName);
         }
+
 #if HITMARKER
-        IHitMarkApi.Capability.Get()!.StartHitMark(player, false, null, null);
+        _plugin.HitMarkApi?.StartHitMark(player, false, null, null);
 #endif
     }
 

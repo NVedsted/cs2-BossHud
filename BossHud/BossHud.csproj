@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <!--<DefineConstants>HITMARKER</DefineConstants>-->
+        <DefineConstants>HITMARKER</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,7 +15,8 @@
 
     <ItemGroup>
         <Reference Include="cs2-HitMarkApi" Condition="$(DefineConstants.Contains('HITMARKER'))">
-            <HintPath>...</HintPath>
+            <Private>false</Private>
+            <HintPath>../libs/cs2-HitMarkApi.dll</HintPath>
         </Reference>
     </ItemGroup>
 
