@@ -142,7 +142,7 @@ public record JsonEntry
 
             if (unsupportedPropsSet.Length != 0)
             {
-                throw new EntryPropertiesNotSupported(unsupportedPropsSet);
+                throw new EntryPropertiesNotSupportedException(unsupportedPropsSet);
             }
 
             if (HitmarkerOnly == true && ShowTrigger is not null)
@@ -242,28 +242,7 @@ public record JsonEntry
 
         return counterConfig;
     }
-}
 
-[AttributeUsage(AttributeTargets.Property)]
-public sealed class UnsupportedAttribute : Attribute;
-
-public abstract class EntryNotSupportedException(string message) : InvalidOperationException(message);
-
-public sealed class EntryPropertiesNotSupported(string[] properties)
-    : EntryNotSupportedException(
-        $"Config contained the following unsupported properties: {string.Join(", ", properties)}")
-{
-    public IEnumerable<string> Properties => properties;
-}
-
-public sealed class BossConfigException(string? bossName, Exception innerException)
-    : Exception($"Configuration of {bossName ?? "<no-name>"} is not valid", innerException)
-{
-    public string? BossName => bossName;
-
-    public ConfigState ConfigState { get; } = innerException switch
-    {
-        EntryNotSupportedException => ConfigState.Unsupported,
-        _ => ConfigState.Broken,
-    };
+    [AttributeUsage(AttributeTargets.Property)]
+    private sealed class UnsupportedAttribute : Attribute;
 }

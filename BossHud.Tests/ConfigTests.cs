@@ -38,7 +38,7 @@ public class ConfigTests
                     }
                     catch (BossConfigException exception)
                     {
-                        if (exception.InnerException is EntryPropertiesNotSupported propertiesNotSupported)
+                        if (exception.InnerException is EntryPropertiesNotSupportedException propertiesNotSupported)
                         {
                             foreach (var property in propertiesNotSupported.Properties)
                             {
