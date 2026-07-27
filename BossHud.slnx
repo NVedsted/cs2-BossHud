@@ -1,4 +1,8 @@
 <Solution>
-  <Project Path="BossHud.Tests/BossHud.Tests.csproj" />
-  <Project Path="BossHud/BossHud.csproj" />
+    <Project Path="BossHud.Tests/BossHud.Tests.csproj" />
+    <Project Path="BossHud/BossHud.csproj" />
+    <Folder Name="/Files/">
+        <File Path="./README.md" />
+        <File Path="LICENSE" />
+    </Folder>
 </Solution>

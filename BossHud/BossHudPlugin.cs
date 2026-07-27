@@ -17,7 +17,9 @@ namespace BossHud;
 public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
 {
     public override string ModuleName => "BossHud";
-    public override string ModuleVersion => "Nicklas Vedsted";
+    public override string ModuleAuthor => "Nicklas Vedsted";
+    public override string ModuleVersion { get; } = typeof(BossHudPlugin).Assembly.GetName().Version!.ToString(3);
+    public override string ModuleDescription => "Shows HP bars for bosses mainly in ZE";
 
     private static readonly string ConfigDirectory =
         Path.Combine(Application.RootDirectory, "configs/plugins/BossHud");

@@ -4,10 +4,10 @@ using BossHud.Model;
 
 namespace BossHud.Tests;
 
-public class BasicTests
+public class ConfigTests
 {
     [Test]
-    public async Task Hm()
+    public async Task ValidateConfigs()
     {
         var success = 0;
         var total = 0;
