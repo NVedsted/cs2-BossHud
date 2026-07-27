@@ -13,6 +13,15 @@ public class EntityIdentifier
     }
 
     private readonly Kind _kind;
+
+    public override string ToString() => _kind switch
+    {
+        Kind.TargetName => _targetName,
+        Kind.TemplatedTargetName => $"{_targetName}_*",
+        Kind.HammerId => $"#{_targetName}",
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
     private readonly string _targetName;
 
     private EntityIdentifier(Kind kind, string targetName)
@@ -47,7 +56,8 @@ public class EntityIdentifier
             ? throw new InvalidOperationException("HammerID cannot be templated")
             : this;
 
-    public CEntityInstance? Find() => Utilities.GetAllEntities().FirstOrDefault(Matches);
+    public CEntityInstance Get() =>
+        Utilities.GetAllEntities().FirstOrDefault(Matches) ?? throw new EntityNotFoundException(this);
 
     public bool Matches(CEntityInstance other)
     {

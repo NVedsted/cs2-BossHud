@@ -81,7 +81,18 @@ public abstract class BossConfig
 
     private void SetupBossInternal(BossHudPlugin plugin, string? templateId)
     {
-        var mainEntity = MainIdentifier.WithTemplateId(templateId).Find()!; // TODO: not found?
+        var mainEntityIdentifier = MainIdentifier.WithTemplateId(templateId);
+
+        CEntityInstance mainEntity;
+        try
+        {
+            mainEntity = mainEntityIdentifier.Get();
+        }
+        catch (EntityNotFoundException exception)
+        {
+            plugin.Logger.LogError(exception, "Could not find main entity for {BossName}", Name);
+            return;
+        }
 
         // Ignore if entity is already part of a boss.
         if (plugin.BossManager.IsBossEntity(mainEntity)) return;
@@ -103,7 +114,17 @@ public abstract class BossConfig
             TemplateId = templateId,
         });
 
-        boss.Initialize();
+        try
+        {
+            boss.Initialize();
+        }
+        catch (Exception e)
+        {
+            plugin.Logger.LogError(e, "Failed to initialize boss {BossName}; removing it", Name);
+            boss.Dispose();
+            return;
+        }
+
         plugin.BossManager.Register(boss);
     }
 

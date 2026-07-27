@@ -13,7 +13,7 @@ public sealed class CreateBossContext
     public required string? TemplateId { get; init; }
 
     public T GetEntity<T>(EntityIdentifier entityIdentifier) where T : NativeObject =>
-        entityIdentifier.WithTemplateId(TemplateId).Find()?.As<T>()!; // TODO: What if not found?
+        entityIdentifier.WithTemplateId(TemplateId).Get().As<T>();
 
     public ICreateBossContextWithConfig<TConfig> WithConfig<TConfig>(TConfig config) =>
         new CreateBossContextWithConfig<TConfig>(this, config);
