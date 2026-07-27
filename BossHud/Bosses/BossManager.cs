@@ -20,8 +20,6 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
     private bool _started;
     private bool _disposed;
 
-    private IEnumerable<IBoss> ActiveBosses => _activeBosses;
-
     // TODO: Should a boss be triggerable again on the same round if multi-trigger is off?
 
     public string? BossMessage { get; private set; }
@@ -98,19 +96,12 @@ public sealed class BossManager(BossHudPlugin plugin) : IDisposable
 
     private void UpdateMessage()
     {
-        var activeBoss = ActiveBosses
-            .FirstOrDefault(b => b.Shown); // TODO: Pick more intelligently or multi-show
-
-        if (activeBoss is null)
-        {
-            BossMessage = null;
-            return;
-        }
-
-        BossMessage = Hud.BuildHud(new Hud.BossData(
-            activeBoss.Config.Name,
-            activeBoss.CurrentHealth,
-            activeBoss.MaxHealth));
+        BossMessage = Hud.BuildHud(_activeBosses
+            .Where(b => b.Shown)
+            .Select(b => new Hud.BossData(
+                b.Config.Name,
+                b.CurrentHealth,
+                b.MaxHealth)));
     }
 
     public void Dispose()

@@ -5,14 +5,40 @@ namespace BossHud.Tests.Rendering;
 public class HudTests
 {
     [Test]
-    public async Task Test()
+    public async Task NoBossReturnsNull()
     {
-        var boss = new Hud.BossData("Scary Boss", 30, 100);
+        Hud.BossData[] bosses = [];
 
-        var hud = Hud.BuildHud(boss);
+        var hud = Hud.BuildHud(bosses);
+
+        await Assert.That(hud).IsNull();
+    }
+
+    [Test]
+    public async Task SingleNonMinor()
+    {
+        Hud.BossData[] bosses = [new("Scary Boss", 30, 100)];
+
+        var hud = Hud.BuildHud(bosses);
 
         await Assert.That(hud)
             .IsEqualTo(
-                "<font>Scary Boss</font><br><font class=\"fontSize-l\" color=\"#FF9900\">30</font> <font>(30%)</font><br><font color=\"#FF9900\">██████</font><font color=\"gray\">██████████████</font>");
+                """Scary Boss<br><font class="fontSize-l" color="#FF9900">30</font> (30%)<br><font color="#FF9900">██████</font><font color="gray">██████████████</font>""");
+    }
+
+    [Test]
+    public async Task TwoBosses()
+    {
+        Hud.BossData[] bosses =
+        [
+            new("Higher Boss", 950, 1000),
+            new("Scary Boss", 30, 100),
+        ];
+
+        var hud = Hud.BuildHud(bosses);
+
+        await Assert.That(hud)
+            .IsEqualTo(
+                """Higher Boss: <font class="fontSize-l" color="#1AFF00">950</font> (95%)<br>Scary Boss: <font class="fontSize-l" color="#FF9900">30</font> (30%)""");
     }
 }
