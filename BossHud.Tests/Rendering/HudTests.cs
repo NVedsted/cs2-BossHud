@@ -48,7 +48,7 @@ public class HudTests
 
         await Assert.That(hud)
             .IsEqualTo(
-                """<font class="fontSize-l" color="#FF9900">30 DMG</font><br><font color="#FF9900">██████</font><font color="gray">██████████████</font>""");
+                "\u200B<font class=\"fontSize-l\" color=\"#FF9900\">30 DMG</font><br><font color=\"#FF9900\">██████</font><font color=\"gray\">██████████████</font>");
     }
 
     [Test]

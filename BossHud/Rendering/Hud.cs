@@ -79,6 +79,13 @@ public static class Hud
         {
             builder.Append($"{bossData.Name}<br>");
         }
+        else
+        {
+            // Hack to ensure HP bar is shown.
+            // If the first thing is a `fontSize-l`-classed element, subsequent lines are hidden.
+            // TODO: investigate further
+            builder.Append('\u200B');
+        }
 
         var color = Gradient.GetHpColor(hpPercentage);
         builder.AppendHealth(bossData, hpPercentage, true);
