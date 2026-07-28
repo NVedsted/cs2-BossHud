@@ -44,11 +44,16 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
     /// </summary>
     private bool _waitingForShowTrigger;
 
+    /// <summary>
+    /// Whether we are waiting for boss to be hit before showing; this is false both if an explicit show trigger is defined or if it has yet to be hit.
+    /// </summary>
+    private bool _waitingForHit;
+
     public bool Shown
     {
         get
         {
-            if (Config.HitMarkerOnly || _timedOut || _waitingForShowTrigger) return false;
+            if (Config.HitMarkerOnly || _timedOut || _waitingForShowTrigger || _waitingForHit) return false;
 
             // TODO: update max-health once shown?
             if (Config.MaxHp is not null && CurrentHealth > Config.MaxHp) return false;
@@ -84,6 +89,11 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
             var showTriggerEntity = context.GetEntity<CEntityInstance>(Config.ShowTrigger.EntityIdentifier);
             ListenerScope.HookSingleEntityOutput(showTriggerEntity, Config.ShowTrigger.Output, OnShowTrigger);
         }
+        else
+        {
+            // If no explicit show trigger, we wait for health to decrease
+            _waitingForHit = true;
+        }
 
         ListenerScope.RegisterListener<Listeners.OnEntityDeleted>(OnEntityDeleted);
         Update();
@@ -91,6 +101,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     protected void OnHit(CCSPlayerController player)
     {
+        _waitingForHit = false;
         _lastDamaged = TimeProvider.System.GetTimestamp();
 
         if (_timedOut)
