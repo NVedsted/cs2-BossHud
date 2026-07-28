@@ -1,0 +1,34 @@
+[changelog]
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+    # {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+            {% if commit.breaking %}[**breaking**] {% endif %}\
+            {{ commit.message | upper_first }}\
+    {% endfor %}
+{% endfor %}
+"""
+trim = true
+render_always = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+require_conventional = false
+split_commits = false
+protect_breaking_commits = false
+commit_parsers = [
+    { message = "^feat", group = "<!-- 0 -->Features" },
+    { message = "^fix", group = "<!-- 1 -->Fixes" },
+    { message = "^refactor", group = "<!-- 2 -->Refactor" },
+    { message = "^chore|^ci|^cd", skip = true },
+    { message = ".*", group = "<!-- 3 -->Other" },
+]
+filter_commits = false
+fail_on_unmatched_commit = false
+use_branch_tags = false
+topo_order = false
+topo_order_commits = true
+sort_commits = "oldest"
+recurse_submodules = false

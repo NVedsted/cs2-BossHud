@@ -19,4 +19,7 @@ Remove-Item -Recurse -Force ./dist/addons | Out-Null
 
 Write-Host "Created dist/BossHud-$version.zip"
 
+git tag "v$version"
+git-cliff --current
+
 Pop-Location
