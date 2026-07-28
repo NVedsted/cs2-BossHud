@@ -57,7 +57,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
                 TimeProvider.System.GetElapsedTime(_lastDamaged).TotalSeconds > Config.Timeout.Value)
             {
                 _timedOut = true;
-                _plugin.Logger.LogInformation("Boss {BossName} has timed out", Config.Name);
+                _plugin.Logger.LogInformation("Boss {BossName} has timed out", Config.InternalName);
                 return false;
             }
 
@@ -78,7 +78,8 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
         if (Config.ShowTrigger is not null)
         {
-            _plugin.Logger.LogInformation("Boss {BossName} will not show until its show trigger is triggered", Config.Name);
+            _plugin.Logger.LogInformation("Boss {BossName} will not show until its show trigger is triggered",
+                Config.InternalName);
             _waitingForShowTrigger = true;
             var showTriggerEntity = context.GetEntity<CEntityInstance>(Config.ShowTrigger.EntityIdentifier);
             ListenerScope.HookSingleEntityOutput(showTriggerEntity, Config.ShowTrigger.Output, OnShowTrigger);
@@ -95,7 +96,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
         if (_timedOut)
         {
             _timedOut = false;
-            _plugin.Logger.LogInformation("Boss {BossName} is no longer timed out", Config.Name);
+            _plugin.Logger.LogInformation("Boss {BossName} is no longer timed out", Config.InternalName);
         }
 #if HITMARKER
         IHitMarkApi.Capability.Get()!.StartHitMark(player, false, null, null);
@@ -111,7 +112,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
         _plugin.BossManager.Unregister(this);
         GC.SuppressFinalize(this);
         _disposed = true;
-        _plugin.Logger.LogInformation("Boss {BossName} was removed", Config.Name);
+        _plugin.Logger.LogInformation("Boss {BossName} was removed", Config.InternalName);
     }
 
     protected abstract bool IsDeletedEntityBreaking(CEntityInstance entity);
@@ -122,7 +123,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
         void Callback()
         {
-            _plugin.Logger.LogInformation("Boss {BossName} had its show trigger triggered", Config.Name);
+            _plugin.Logger.LogInformation("Boss {BossName} had its show trigger triggered", Config.InternalName);
             _waitingForShowTrigger = false;
         }
 
@@ -174,7 +175,7 @@ public abstract class Boss<TConfig>(ICreateBossContextWithConfig<TConfig> contex
 
     private void Defeated()
     {
-        _plugin.Logger.LogInformation("Boss {BossName} has been defeated", Config.Name);
+        _plugin.Logger.LogInformation("Boss {BossName} has been defeated", Config.InternalName);
         DamageTable?.Print(BossType, Config.Name);
         Dispose();
     }

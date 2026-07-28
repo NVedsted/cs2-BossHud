@@ -10,6 +10,8 @@ public abstract class BossConfig
 {
     public string? Name { get; set; }
 
+    public string InternalName => Name ?? $"<no-name#{Order + 1}>";
+
     public int Order { get; set; }
 
     public OutputDefinitionWithDelay Trigger
@@ -90,7 +92,7 @@ public abstract class BossConfig
         }
         catch (EntityNotFoundException exception)
         {
-            plugin.Logger.LogError(exception, "Could not find main entity for {BossName}", Name);
+            plugin.Logger.LogError(exception, "Could not find main entity for {BossName}", InternalName);
             return;
         }
 
@@ -99,12 +101,12 @@ public abstract class BossConfig
 
         if (templateId is null)
         {
-            plugin.Logger.LogInformation("Setting up boss {BossName}", Name ?? "<no-name>");
+            plugin.Logger.LogInformation("Setting up boss {BossName}", InternalName);
         }
         else
         {
             plugin.Logger.LogInformation("Setting up templated boss {BossName} (Template ID: {TemplateId})",
-                Name ?? "<no-name>", templateId);
+                InternalName, templateId);
         }
 
         var boss = CreateBoss(new CreateBossContext
@@ -120,7 +122,7 @@ public abstract class BossConfig
         }
         catch (Exception e)
         {
-            plugin.Logger.LogError(e, "Failed to initialize boss {BossName}; removing it", Name);
+            plugin.Logger.LogError(e, "Failed to initialize boss {BossName}; removing it", InternalName);
             boss.Dispose();
             return;
         }
