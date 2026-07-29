@@ -48,10 +48,10 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
     {
         RegisterListener<Listeners.OnTick>(OnTick);
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        RegisterListener<Listeners.OnClientPutInServer>(OnClientPutInServer);
+        RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
         HookEntityOutput("*", "*", OnEntityOutput);
 
-        RegisterEventHandler<EventPlayerConnectFull>(EventPlayerConnectFull);
-        RegisterEventHandler<EventPlayerDisconnect>(EventPlayerDisconnect);
         RegisterEventHandler<EventRoundEnd>(EventRoundEnded);
         RegisterEventHandler<EventRoundStart>(EventRoundStart);
 
@@ -59,7 +59,7 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         {
             OnMapStart(Server.MapName);
 
-            foreach (var player in Utilities.GetPlayers())
+            foreach (var player in Utilities.GetPlayers().Where(player => !player.IsBot))
             {
                 _activePlayers[player.Slot] = player;
             }
@@ -183,18 +183,15 @@ public class BossHudPlugin : BasePlugin, IPluginConfig<BossHudPluginConfig>
         }
     }
 
-    private HookResult EventPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+    private void OnClientDisconnect(int playerSlot) => _activePlayers[playerSlot] = null;
+
+    private void OnClientPutInServer(int playerSlot)
     {
-        if (@event.Userid is { } player) _activePlayers[player.Slot] = null;
+        var player = Utilities.GetPlayerFromSlot(playerSlot);
 
-        return HookResult.Continue;
-    }
+        if (player is null || player.IsBot) return;
 
-    private HookResult EventPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
-    {
-        if (@event.Userid is { } player) _activePlayers[player.Slot] = player;
-
-        return HookResult.Continue;
+        _activePlayers[playerSlot] = player;
     }
 
     private void OnTick()
