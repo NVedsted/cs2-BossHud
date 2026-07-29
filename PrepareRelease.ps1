@@ -17,9 +17,9 @@ Compress-Archive -Path ./dist/addons -DestinationPath ./dist/BossHud-$version.zi
 
 Remove-Item -Recurse -Force ./dist/addons | Out-Null
 
-Write-Host "Created dist/BossHud-$version.zip"
+Write-Host "Created dist/BossHud-$version-with-hitmarkers.zip"
 
-git tag "v$version"
-git-cliff --current
+#git tag "v$version"
+#git-cliff --current
 
 Pop-Location
