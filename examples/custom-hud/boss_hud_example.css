@@ -1,0 +1,101 @@
+#bosses {
+    margin: 5px;
+    height: 0;
+    flow-children: down;
+
+    &.active {
+        height: fit-children;
+    }
+
+    &.single {
+        width: 300px;
+    }
+
+    &.multi {
+        width: 200px;
+    }
+
+    &>.title {
+        font-size: 18px;
+        font-weight: bold;
+        width: 100%;
+        text-align: center;
+    }
+
+    .boss {
+        height: 0;
+        width: 100%;
+        background-color: black;
+        flow-children: down;
+        padding: 5px;
+        margin-bottom: 5px;
+
+        .name {
+            height: 0;
+        }
+
+        &.hit {
+            color: green;
+        }
+
+        &.hp {
+            color: cyan;
+        }
+
+        &.named .name {
+            height: fit-children;
+        }
+
+        &.active {
+            height: fit-children;
+        }
+
+        .title {
+            font-size: 15;
+            width: 100%;
+            text-align: center;
+        }
+
+        &.hp_stage_0 .bar {
+            width: 0%;
+        }
+
+        &.hp_stage_1 .bar {
+            width: 25%;
+        }
+
+        &.hp_stage_2 .bar {
+            width: 50%;
+        }
+
+        &.hp_stage_3 .bar {
+            width: 75%;
+        }
+
+        &.hp_stage_4 .bar {
+            width: 100%;
+        }
+
+        .bar_container {
+            padding: 2px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.596);
+
+            .bar {
+                height: 10px;
+                background-color: green;
+            }
+        }
+    }
+
+    #overflow {
+        height: 0;
+    }
+
+    &.overflown #overflow {
+        height: fit-children;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.596);
+        text-align: center;
+    }
+}

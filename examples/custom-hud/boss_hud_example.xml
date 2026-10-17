@@ -1,0 +1,33 @@
+<root>
+    <styles>
+        <include src="file://{resources}/styles/custom_game/boss_hud_example.css" />
+    </styles>
+
+    <Panel>
+        <Panel id="bosses">
+            <Label class="title" text="Bosses" />
+
+            <Panel id="boss-0" class="boss">
+                <Label class="title" text="Boss 0" />
+                <Label class="name" text="Name: {s:name}" />
+                <Label text="Current HP: {s:current_hp}" />
+                <Label text="Max HP: {s:max_hp}" />
+                <Label text="Percentage (rounded): {s:percentage_rounded}%" />
+                <Panel class="bar_container">
+                    <Panel class="bar" />
+                </Panel>
+            </Panel>
+            <Panel id="boss-1" class="boss">
+                <Label class="title" text="Boss 1" />
+                <Label text="Name: {s:name}" />
+                <Label text="Current HP: {s:current_hp}" />
+                <Label text="Max HP: {s:max_hp}" />
+                <Label text="Percentage (rounded): {s:percentage_rounded}%" />
+                <Panel class="bar_container">
+                    <Panel class="bar" />
+                </Panel>
+            </Panel>
+            <Label id="overflow" text="and {s:not_shown_count} more..." />
+        </Panel>
+    </Panel>
+</root>
